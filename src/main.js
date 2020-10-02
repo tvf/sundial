@@ -190,6 +190,8 @@ function draw_to_canvas(gl, render_state, camera) {
     gl.clearColor(0.0, 0.0, 0.5, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    gl.enable(gl.DEPTH_TEST);
+
     if (render_state.sundial.mesh == null) {
         return;
     }
@@ -291,13 +293,13 @@ function main() {
 //
 // [X] render the sundial
 //
-// [ ] render the texture
-//
 // [X] camera controls
 //
 // [ ] shadow volume extrusion
 //
 // [ ] stencil shadows
+//
+// [ ] render textures
 //
 // [ ] hook up the date time lat long controls
 
