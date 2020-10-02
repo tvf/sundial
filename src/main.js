@@ -155,50 +155,64 @@ function setup_webgl() {
 }
 
 function setup_filepicker(gl, render_state) {
-  var file_selection = document.querySelector('#sundial-obj');
+    var file_selection = document.querySelector('#sundial-obj');
 
-  file_selection.oninput = function(event) {
-    var reader = new FileReader();
+    file_selection.oninput = function (event) {
+        var reader = new FileReader();
 
-    reader.onload = function(filecontents) {
-        var mesh = new Mesh(filecontents.target.result);
-        render_state.sundial.mesh = initMeshBuffers(gl, mesh);
-        // initMeshBuffers?
+        reader.onload = function (filecontents) {
+            var mesh = new Mesh(filecontents.target.result);
+            render_state.sundial.mesh = initMeshBuffers(gl, mesh);
+            // initMeshBuffers?
+        };
+
+        reader.readAsText(event.target.files[0]);
     };
-
-    reader.readAsText(event.target.files[0]);
-  };
 }
 
 function draw_to_canvas(gl, render_state, camera) {
-
     gl.clearColor(0.0, 0.0, 0.5, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (render_state.sundial.mesh == null) { return; }
+    if (render_state.sundial.mesh == null) {
+        return;
+    }
 
     gl.useProgram(render_state.sundial.program);
 
-    gl.uniformMatrix4fv(gl.getUniformLocation(render_state.sundial.program,
-                                              'world_to_clip'),
-                        false,
-                        camera.world_to_clip);
+    gl.uniformMatrix4fv(
+        gl.getUniformLocation(render_state.sundial.program, 'world_to_clip'),
+        false,
+        camera.world_to_clip,
+    );
 
     gl.bindBuffer(gl.ARRAY_BUFFER, render_state.sundial.mesh.vertexBuffer);
 
-    const pos_attr = gl.getAttribLocation(render_state.sundial.program,
-                                          "world_position");
+    const pos_attr = gl.getAttribLocation(
+        render_state.sundial.program,
+        'world_position',
+    );
     gl.enableVertexAttribArray(pos_attr);
-    gl.vertexAttribPointer(pos_attr,
-                           render_state.sundial.mesh.vertexBuffer.itemSize,
-                           gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(
+        pos_attr,
+        render_state.sundial.mesh.vertexBuffer.itemSize,
+        gl.FLOAT,
+        false,
+        0,
+        0,
+    );
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,
-                  render_state.sundial.mesh.indexBuffer);
+    gl.bindBuffer(
+        gl.ELEMENT_ARRAY_BUFFER,
+        render_state.sundial.mesh.indexBuffer,
+    );
 
-    gl.drawElements(gl.TRIANGLES,
-                    render_state.sundial.mesh.indexBuffer.numItems,
-                    gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(
+        gl.TRIANGLES,
+        render_state.sundial.mesh.indexBuffer.numItems,
+        gl.UNSIGNED_SHORT,
+        0,
+    );
 }
 
 function vector_to_sun(altitude, azimuth) {
