@@ -6,6 +6,8 @@ import { Mesh, initMeshBuffers } from 'webgl-obj-loader';
 
 import * as shaders from './shaders';
 
+import test_dial from './dial.obj';
+
 var paraview_style_camera = {
     rotation: mat4.create(),
     translation: mat4.fromTranslation(
@@ -154,8 +156,23 @@ function setup_webgl() {
     return gl;
 }
 
+function load_file(filename) {
+    var request = new XMLHttpRequest();
+    request.open('GET', filename, false); // `false` makes the request synchronous
+    request.send(null);
+
+    if (request.status === 200) {
+        return request.responseText;
+    }
+
+    console.error("couldn't load file: " + filename);
+}
+
 function setup_filepicker(gl, render_state) {
     var file_selection = document.querySelector('#sundial-obj');
+
+    var mesh = new Mesh(load_file(test_dial));
+    render_state.sundial.mesh = initMeshBuffers(gl, mesh);
 
     file_selection.oninput = function (event) {
         var reader = new FileReader();
@@ -163,7 +180,6 @@ function setup_filepicker(gl, render_state) {
         reader.onload = function (filecontents) {
             var mesh = new Mesh(filecontents.target.result);
             render_state.sundial.mesh = initMeshBuffers(gl, mesh);
-            // initMeshBuffers?
         };
 
         reader.readAsText(event.target.files[0]);
@@ -271,13 +287,13 @@ function main() {
 // [X] given altitude + azimuth determine direction to sun in the
 //     X east Y north coordinate system
 //
-// [ ] load an OBJ sundial
+// [X] load an OBJ sundial
 //
-// [ ] render the sundial
+// [X] render the sundial
 //
 // [ ] render the texture
 //
-// [ ] camera controls
+// [X] camera controls
 //
 // [ ] shadow volume extrusion
 //
