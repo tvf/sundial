@@ -15,7 +15,6 @@ function setup_webgl() {
 }
 
 function vector_to_sun(altitude, azimuth) {
-
     let x = -Math.sin(azimuth);
     let y = -Math.cos(azimuth);
 
@@ -26,7 +25,6 @@ function vector_to_sun(altitude, azimuth) {
 }
 
 function main() {
-
     const gl = setup_webgl();
 
     let today = new Date();
@@ -38,8 +36,10 @@ function main() {
     let sun_position_element = document.querySelector('#sun-pos');
     sun_position_element.textContent = JSON.stringify(sun_pos);
 
-    console.log("vector to sun: ",
-                vector_to_sun(sun_pos.altitude, sun_pos.azimuth));
+    console.log(
+        'vector to sun: ',
+        vector_to_sun(sun_pos.altitude, sun_pos.azimuth),
+    );
 }
 
 // implementation plan
@@ -50,6 +50,8 @@ function main() {
 // [ ] load an OBJ sundial
 //
 // [ ] render the sundial
+//
+// [ ] render the texture
 //
 // [ ] camera controls
 //

@@ -1,19 +1,19 @@
 {
-  "name": "sundial",
-  "version": "1.0.0",
-  "repository": "https://github.com/tvf/sundial.git",
-  "author": "Thomas Foster <thomasvfoster@gmail.com>",
-  "scripts": {
-    "dev": "parcel src/index.html",
-    "build": "parcel build src/index.html",
-    "format": "prettier --write ./**/*.{json,html,js}"
-  },
-  "devDependencies": {
-    "parcel-bundler": "^1.12.4",
-    "prettier": "^2.1.2"
-  },
-  "dependencies": {
-    "gl-matrix": "^3.3.0",
-    "suncalc": "^1.8.0"
-  }
+    "name": "sundial",
+    "version": "1.0.0",
+    "repository": "https://github.com/tvf/sundial.git",
+    "author": "Thomas Foster <thomasvfoster@gmail.com>",
+    "scripts": {
+        "dev": "parcel src/index.html",
+        "build": "parcel build src/index.html",
+        "format": "prettier --write ./**/*.{json,html,js}"
+    },
+    "devDependencies": {
+        "parcel-bundler": "^1.12.4",
+        "prettier": "^2.1.2"
+    },
+    "dependencies": {
+        "gl-matrix": "^3.3.0",
+        "suncalc": "^1.8.0"
+    }
 }
