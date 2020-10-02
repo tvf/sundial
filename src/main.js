@@ -12,4 +12,22 @@ function main() {
     sun_position_element.textContent = JSON.stringify(sun_pos);
 }
 
+// implementation plan
+//
+// [ ] given altitude + azimuth determine direction to sun in the
+//     X east Y north coordinate system
+//
+// [ ] load an OBJ sundial
+//
+// [ ] render the sundial
+//
+// [ ] camera controls
+//
+// [ ] shadow volume extrusion
+//
+// [ ] stencil shadows
+//
+// [ ] hook up the date time lat long controls
+//
+
 main();
