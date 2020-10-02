@@ -13,6 +13,7 @@
     "prettier": "^2.1.2"
   },
   "dependencies": {
+    "gl-matrix": "^3.3.0",
     "suncalc": "^1.8.0"
   }
 }
