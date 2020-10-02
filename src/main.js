@@ -186,7 +186,38 @@ function setup_filepicker(gl, render_state) {
     };
 }
 
+// OK how do the stencil shadows work again?
+//
+// I create a little triangular prism for every triangle in the mesh.
+// (can do this with instanced rendering? or just the hard way)
+//
+// need the normals to be correct for this!
+//
+// clear the stencil buffer
+// draw all the shadow prism fronts, increment-wrap-ing the stencil on Z-fail
+// draw all the shadow prism backs, decrement-wrap-ing the stencil on Z-fail
+//
+// draw the fully lit scene wherever the stencil is 0
+
+// how do I make the shadow volumes?
+// make two copies of the vertex position information
+// one extra piece of data, determining what end the vertices are at
+// go through each triple of index data
+//
+// really we'll need per-face normals, will have to precalculate those
+// can I do it differently? like the sun end and the not-sun end?
+
+// alternative: can I just draw the shadow edges?
+// put stuff on the GPU for each edge,
+// with the face normals from each side
+// (this is a lot less stuff)
+
+// can I raytrace the shadows (in WebGL?) yes it would be lols do that next
+
+// 8 triangles of shadow volume per triangle of sundial? can we do better?
+
 function draw_to_canvas(gl, render_state, camera) {
+
     gl.clearColor(0.0, 0.0, 0.5, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
