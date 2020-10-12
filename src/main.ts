@@ -146,7 +146,7 @@ function setup_camera_controls() {
 
 function setup_webgl() {
     const canvas = document.querySelector('#gl_canvas') as HTMLCanvasElement;
-    const gl = canvas.getContext('webgl2', {stencil:true});
+    const gl = canvas.getContext('webgl2', { stencil: true });
 
     if (!gl) {
         alert('No WebGL2!');
@@ -168,61 +168,75 @@ function load_file(filename) {
     console.error("couldn't load file: " + filename);
 }
 
-function make_shadow_mesh(gl : WebGLRenderingContext, model_mesh : Mesh) {
-
+function make_shadow_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
     // keys are "index index" pairs
     let triangle_normals_by_edge_indices = {};
     let edges = {};
 
     for (let i = 0; i < model_mesh.indices.length; i += 3) {
-
         let i1 = model_mesh.indices[i];
-        let v1 = vec3.fromValues(model_mesh.vertices[i1 * 3 + 0],
-                                 model_mesh.vertices[i1 * 3 + 1],
-                                 model_mesh.vertices[i1 * 3 + 2]);
+        let v1 = vec3.fromValues(
+            model_mesh.vertices[i1 * 3 + 0],
+            model_mesh.vertices[i1 * 3 + 1],
+            model_mesh.vertices[i1 * 3 + 2],
+        );
 
         let i2 = model_mesh.indices[i + 1];
-        let v2 = vec3.fromValues(model_mesh.vertices[i2 * 3 + 0],
-                                 model_mesh.vertices[i2 * 3 + 1],
-                                 model_mesh.vertices[i2 * 3 + 2]);
+        let v2 = vec3.fromValues(
+            model_mesh.vertices[i2 * 3 + 0],
+            model_mesh.vertices[i2 * 3 + 1],
+            model_mesh.vertices[i2 * 3 + 2],
+        );
 
         let i3 = model_mesh.indices[i + 2];
-        let v3 = vec3.fromValues(model_mesh.vertices[i3 * 3 + 0],
-                                 model_mesh.vertices[i3 * 3 + 1],
-                                 model_mesh.vertices[i3 * 3 + 2]);
+        let v3 = vec3.fromValues(
+            model_mesh.vertices[i3 * 3 + 0],
+            model_mesh.vertices[i3 * 3 + 1],
+            model_mesh.vertices[i3 * 3 + 2],
+        );
 
         // assume ccw triangle
-        let normal = vec3.cross(vec3.create(),
-                                vec3.subtract(vec3.create(), v2, v1),
-                                vec3.subtract(vec3.create(), v3, v1));
+        let normal = vec3.cross(
+            vec3.create(),
+            vec3.subtract(vec3.create(), v2, v1),
+            vec3.subtract(vec3.create(), v3, v1),
+        );
 
         vec3.normalize(normal, normal);
 
-        let e1_key = i1 + " " + i2;
-        let e2_key = i2 + " " + i3;
-        let e3_key = i3 + " " + i1;
+        let e1_key = i1 + ' ' + i2;
+        let e2_key = i2 + ' ' + i3;
+        let e3_key = i3 + ' ' + i1;
 
         triangle_normals_by_edge_indices[e1_key] = normal;
         triangle_normals_by_edge_indices[e2_key] = normal;
         triangle_normals_by_edge_indices[e3_key] = normal;
 
-        if (i1 < i2) { edges[i1 + " " + i2] = [i1, i2, v1, v2] }
-        else { edges[i2 + " " + i1] = [i2, i1, v2, v1]; }
+        if (i1 < i2) {
+            edges[i1 + ' ' + i2] = [i1, i2, v1, v2];
+        } else {
+            edges[i2 + ' ' + i1] = [i2, i1, v2, v1];
+        }
 
-        if (i2 < i3) { edges[i2 + " " + i3] = [i2, i3, v2, v3]; }
-        else { edges[i3 + " " + i2] = [i3, i2, v3, v2]; }
+        if (i2 < i3) {
+            edges[i2 + ' ' + i3] = [i2, i3, v2, v3];
+        } else {
+            edges[i3 + ' ' + i2] = [i3, i2, v3, v2];
+        }
 
-        if (i3 < i1) { edges[i3 + " " + i1] = [i3, i1, v3, v1]; }
-        else { edges[i1 + " " + i3] = [i1, i3, v1, v3]; }
+        if (i3 < i1) {
+            edges[i3 + ' ' + i1] = [i3, i1, v3, v1];
+        } else {
+            edges[i1 + ' ' + i3] = [i1, i3, v1, v3];
+        }
     }
 
-    let positions : number [] = [];
-    let primary_normal : number [] = [];
-    let secondary_normal : number[] = [];
-    let indices : number[] = [];
+    let positions: number[] = [];
+    let primary_normal: number[] = [];
+    let secondary_normal: number[] = [];
+    let indices: number[] = [];
 
     for (const edge in edges) {
-
         let i1 = edges[edge][0];
         let i2 = edges[edge][1];
         let v1 = edges[edge][2];
@@ -236,13 +250,14 @@ function make_shadow_mesh(gl : WebGLRenderingContext, model_mesh : Mesh) {
         Array.prototype.push.apply(positions, v2);
 
         let primary_normal_12 = vec3.zero(vec3.create());
-        if (triangle_normals_by_edge_indices.hasOwnProperty(i1 + " " + i2)) {
-            primary_normal_12 = triangle_normals_by_edge_indices[i1 + " " + i2];
+        if (triangle_normals_by_edge_indices.hasOwnProperty(i1 + ' ' + i2)) {
+            primary_normal_12 = triangle_normals_by_edge_indices[i1 + ' ' + i2];
         }
 
         let secondary_normal_12 = vec3.zero(vec3.create());
-        if (triangle_normals_by_edge_indices.hasOwnProperty(i2 + " " + i1)) {
-            secondary_normal_12 = triangle_normals_by_edge_indices[i2 + " " + i1];
+        if (triangle_normals_by_edge_indices.hasOwnProperty(i2 + ' ' + i1)) {
+            secondary_normal_12 =
+                triangle_normals_by_edge_indices[i2 + ' ' + i1];
         }
 
         Array.prototype.push.apply(primary_normal, primary_normal_12);
@@ -255,8 +270,14 @@ function make_shadow_mesh(gl : WebGLRenderingContext, model_mesh : Mesh) {
         Array.prototype.push.apply(secondary_normal, secondary_normal_12);
         Array.prototype.push.apply(secondary_normal, primary_normal_12);
 
-        indices.push(base_index + 0, base_index + 1, base_index + 2,
-                     base_index + 1, base_index + 3, base_index + 2);
+        indices.push(
+            base_index + 0,
+            base_index + 1,
+            base_index + 2,
+            base_index + 1,
+            base_index + 3,
+            base_index + 2,
+        );
     }
 
     // console.log(indices);
@@ -267,22 +288,34 @@ function make_shadow_mesh(gl : WebGLRenderingContext, model_mesh : Mesh) {
     const position_buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    position_buffer["itemSize"] = 3;
+    position_buffer['itemSize'] = 3;
 
     const primary_normal_buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, primary_normal_buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(primary_normal), gl.STATIC_DRAW);
-    primary_normal_buffer["itemSize"] = 3;
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(primary_normal),
+        gl.STATIC_DRAW,
+    );
+    primary_normal_buffer['itemSize'] = 3;
 
     const secondary_normal_buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, secondary_normal_buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(secondary_normal), gl.STATIC_DRAW);
-    secondary_normal_buffer["itemSize"] = 3;
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(secondary_normal),
+        gl.STATIC_DRAW,
+    );
+    secondary_normal_buffer['itemSize'] = 3;
 
     const index_buffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-    index_buffer["numItems"] = indices.length;
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(indices),
+        gl.STATIC_DRAW,
+    );
+    index_buffer['numItems'] = indices.length;
 
     let result = {
         vertexBuffer: position_buffer,
@@ -348,7 +381,6 @@ function setup_filepicker(gl, render_state) {
 // 8 triangles of shadow volume per triangle of sundial? can we do better?
 
 function draw_sundial(gl, render_state, camera) {
-
     let shader = render_state.sundial.program;
 
     gl.useProgram(shader);
@@ -361,10 +393,7 @@ function draw_sundial(gl, render_state, camera) {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, render_state.sundial.mesh.vertexBuffer);
 
-    const pos_attr = gl.getAttribLocation(
-        shader,
-        'world_position',
-    );
+    const pos_attr = gl.getAttribLocation(shader, 'world_position');
     gl.enableVertexAttribArray(pos_attr);
     gl.vertexAttribPointer(
         pos_attr,
@@ -389,7 +418,6 @@ function draw_sundial(gl, render_state, camera) {
 }
 
 function draw_shadow_volume(gl, render_state, camera) {
-
     let shader = render_state.sundial.shadow_program;
 
     gl.useProgram(shader);
@@ -407,59 +435,57 @@ function draw_shadow_volume(gl, render_state, camera) {
     );
 
     {
-    gl.bindBuffer(gl.ARRAY_BUFFER, render_state.sundial.shadow_mesh.vertexBuffer);
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            render_state.sundial.shadow_mesh.vertexBuffer,
+        );
 
-    const pos_attr = gl.getAttribLocation(
-        shader,
-        'world_position',
-    );
-    gl.enableVertexAttribArray(pos_attr);
-    gl.vertexAttribPointer(
-        pos_attr,
-        render_state.sundial.shadow_mesh.vertexBuffer.itemSize,
-        gl.FLOAT,
-        false,
-        0,
-        0,
-    );
+        const pos_attr = gl.getAttribLocation(shader, 'world_position');
+        gl.enableVertexAttribArray(pos_attr);
+        gl.vertexAttribPointer(
+            pos_attr,
+            render_state.sundial.shadow_mesh.vertexBuffer.itemSize,
+            gl.FLOAT,
+            false,
+            0,
+            0,
+        );
     }
 
     {
-    gl.bindBuffer(gl.ARRAY_BUFFER,
-                  render_state.sundial.shadow_mesh.primaryNormalBuffer);
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            render_state.sundial.shadow_mesh.primaryNormalBuffer,
+        );
 
-    const pos_attr = gl.getAttribLocation(
-        shader,
-        'primary_normal',
-    );
-    gl.enableVertexAttribArray(pos_attr);
-    gl.vertexAttribPointer(
-        pos_attr,
-        render_state.sundial.shadow_mesh.primaryNormalBuffer.itemSize,
-        gl.FLOAT,
-        false,
-        0,
-        0,
-    );
+        const pos_attr = gl.getAttribLocation(shader, 'primary_normal');
+        gl.enableVertexAttribArray(pos_attr);
+        gl.vertexAttribPointer(
+            pos_attr,
+            render_state.sundial.shadow_mesh.primaryNormalBuffer.itemSize,
+            gl.FLOAT,
+            false,
+            0,
+            0,
+        );
     }
 
     {
-    gl.bindBuffer(gl.ARRAY_BUFFER,
-                  render_state.sundial.shadow_mesh.secondaryNormalBuffer);
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            render_state.sundial.shadow_mesh.secondaryNormalBuffer,
+        );
 
-    const pos_attr = gl.getAttribLocation(
-        shader,
-        'secondary_normal',
-    );
-    gl.enableVertexAttribArray(pos_attr);
-    gl.vertexAttribPointer(
-        pos_attr,
-        render_state.sundial.shadow_mesh.secondaryNormalBuffer.itemSize,
-        gl.FLOAT,
-        false,
-        0,
-        0,
-    );
+        const pos_attr = gl.getAttribLocation(shader, 'secondary_normal');
+        gl.enableVertexAttribArray(pos_attr);
+        gl.vertexAttribPointer(
+            pos_attr,
+            render_state.sundial.shadow_mesh.secondaryNormalBuffer.itemSize,
+            gl.FLOAT,
+            false,
+            0,
+            0,
+        );
     }
 
     gl.bindBuffer(
@@ -476,7 +502,6 @@ function draw_shadow_volume(gl, render_state, camera) {
 }
 
 function draw_to_canvas(gl, render_state, camera) {
-
     gl.clearColor(0.0, 0.0, 0.5, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
@@ -487,7 +512,6 @@ function draw_to_canvas(gl, render_state, camera) {
     // gl.enable(gl.CULL_FACE);
 
     if (render_state.sundial.mesh != null) {
-
         gl.colorMask(false, false, false, false); // don't update colors
 
         // fill the depth buffer
@@ -552,7 +576,7 @@ function main() {
     sun_position_element.textContent = JSON.stringify(sun_pos);
 
     let to_sun = vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
-    console.log( 'vector to sun: ', to_sun);
+    console.log('vector to sun: ', to_sun);
 
     let render_state = {
         sundial: {

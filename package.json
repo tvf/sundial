@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "parcel src/index.html",
         "build": "parcel build src/index.html",
-        "format": "prettier --write ./**/*.{json,html,js}"
+        "format": "prettier --write ./**/*.{json,html,js,ts}"
     },
     "devDependencies": {
         "glslify-bundle": "^5.1.1",
