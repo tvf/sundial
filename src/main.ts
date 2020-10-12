@@ -298,6 +298,7 @@ function populate_meshes(gl, render_state, obj_string) {
     var mesh = new Mesh(obj_string);
     render_state.sundial.mesh = initMeshBuffers(gl, mesh);
     render_state.sundial.shadow_mesh = make_shadow_mesh(gl, mesh);
+    // TODO populate shadow_cap_mesh
 }
 
 function setup_filepicker(gl, render_state) {
@@ -499,7 +500,8 @@ function draw_to_canvas(gl, render_state, camera) {
         gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.DECR_WRAP, gl.KEEP);
 
         draw_shadow_volume(gl, render_state, camera);
-        // TODO we also need to draw the sundial itself for putting caps on the volumes
+        // TODO we also need to draw the sundial itself for putting caps on
+        // the volumes
         // need to draw ONLY the faces with normals pointing away
         // build another mesh and some more shaders
 
@@ -555,9 +557,14 @@ function main() {
     let render_state = {
         sundial: {
             mesh: null,
-            shadow_mesh: null,
             program: shaders.sundial_shader(gl),
+
+            shadow_mesh: null,
             shadow_program: shaders.shadow_shader(gl),
+
+            shadow_cap_mesh: null,
+            shadow_cap_program: shaders.shadow_cap_shader(gl),
+
             to_sun: to_sun,
         },
     };
