@@ -29,9 +29,10 @@ function mouse_based_orbit_camera() {
     const zFar = 500.0;
     const projectionMatrix = mat4.create();
 
-    // mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
-    mat4.ortho(projectionMatrix, -16.0, 16.0, -12.0, 12.0, zNear, zFar);
+    // mat4.ortho(projectionMatrix, -16.0, 16.0, -12.0, 12.0, zNear, zFar);
+    // TODO make the zoom controls nice with the orthographic view
 
     const modelViewMatrix = mat4.mul(
         mat4.create(),
@@ -438,6 +439,11 @@ function draw_sundial(gl, render_state, camera, brightness) {
         camera.world_to_clip,
     );
 
+    gl.uniform3fv(
+        gl.getUniformLocation(shader, 'to_sun'),
+        render_state.sundial.to_sun,
+    );
+
     gl.uniform1f(gl.getUniformLocation(shader, 'brightness'), brightness);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, render_state.sundial.mesh.vertexBuffer);
@@ -619,7 +625,13 @@ function draw_shadow_volume(gl, render_state, camera, translation) {
 }
 
 function draw_to_canvas(gl, render_state, camera) {
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+    if (render_state.sundial.to_sun[2] < 0) {
+        gl.clearColor(0.0, 0.0, 0.2, 1.0);
+    } else {
+        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    }
+
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
     gl.enable(gl.STENCIL_TEST);
@@ -629,6 +641,11 @@ function draw_to_canvas(gl, render_state, camera) {
     // gl.enable(gl.CULL_FACE);
 
     if (render_state.sundial.mesh != null) {
+
+        if (render_state.sundial.to_sun[2] < 0) {
+            draw_sundial(gl, render_state, camera, 0.1); // draw shady bit
+        } else {
+
         gl.colorMask(false, false, false, false); // don't update colors
 
         // fill the depth buffer
@@ -671,6 +688,7 @@ function draw_to_canvas(gl, render_state, camera) {
         draw_sundial(gl, render_state, camera, 1); // draw sunny bit
 
         gl.depthMask(true); // unmask depth buffer
+        }
     }
 }
 
@@ -684,6 +702,25 @@ function vector_to_sun(altitude, azimuth) {
     return vec3.fromValues(horizontal_length * x, horizontal_length * y, z);
 }
 
+function sun_position_for_time(now) {
+
+    // now is in ms since the animation began
+
+    let latitude = 52;
+    let longitude = 0;
+
+    let sun_pos = SunCalc.getPosition(now, latitude, longitude);
+
+//    let sun_position_element = document.querySelector('#sun-pos');
+//    sun_position_element.textContent = JSON.stringify(sun_pos);
+
+    let time_element = document.querySelector('#time');
+    let date = new Date(now);
+    time_element.textContent = date.toDateString() + ' ' + date.toTimeString();
+
+    return vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
+}
+
 function main() {
     const gl = setup_webgl();
     setup_camera_controls();
@@ -694,8 +731,8 @@ function main() {
 
     let sun_pos = SunCalc.getPosition(today, latitude, longitude);
 
-    let sun_position_element = document.querySelector('#sun-pos');
-    sun_position_element.textContent = JSON.stringify(sun_pos);
+//     let sun_position_element = document.querySelector('#sun-pos');
+//     sun_position_element.textContent = JSON.stringify(sun_pos);
 
     let to_sun = vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
     console.log('vector to sun: ', to_sun);
@@ -721,12 +758,15 @@ function main() {
     setup_filepicker(gl, render_state);
 
     function render(now) {
+
         let camera = mouse_based_orbit_camera();
 
-        if (dirty) {
+        render_state.sundial.to_sun = sun_position_for_time(24 * 60 * 6 * now);
+
+        // if (dirty) {
             draw_to_canvas(gl, render_state, camera);
             dirty = false;
-        }
+        // }
 
         requestAnimationFrame(render);
     }
