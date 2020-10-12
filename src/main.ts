@@ -169,13 +169,11 @@ function load_file(filename) {
 }
 
 function make_shadow_cap_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
-
     let positions: number[] = [];
     let normals: number[] = [];
     let indices: number[] = [];
 
     for (let i = 0; i < model_mesh.indices.length; i += 3) {
-
         let base_index = positions.length / 3;
 
         let i1 = model_mesh.indices[i];
@@ -216,7 +214,7 @@ function make_shadow_cap_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
         Array.prototype.push.apply(normals, normal);
         Array.prototype.push.apply(normals, normal);
 
-        indices.push( base_index + 0, base_index + 1, base_index + 2);
+        indices.push(base_index + 0, base_index + 1, base_index + 2);
     }
 
     const position_buffer = gl.createBuffer();
@@ -226,11 +224,7 @@ function make_shadow_cap_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
 
     const normal_buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, normal_buffer);
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array(normals),
-        gl.STATIC_DRAW,
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
     normal_buffer['itemSize'] = 3;
 
     const index_buffer = gl.createBuffer();
@@ -444,10 +438,7 @@ function draw_sundial(gl, render_state, camera, brightness) {
         camera.world_to_clip,
     );
 
-    gl.uniform1f(
-        gl.getUniformLocation(shader, 'brightness'),
-        brightness
-    );
+    gl.uniform1f(gl.getUniformLocation(shader, 'brightness'), brightness);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, render_state.sundial.mesh.vertexBuffer);
 
@@ -491,10 +482,7 @@ function draw_shadow_caps(gl, render_state, camera, translation) {
         render_state.sundial.to_sun,
     );
 
-    gl.uniform1f(
-        gl.getUniformLocation(shader, 'shadow_length'),
-        translation,
-    );
+    gl.uniform1f(gl.getUniformLocation(shader, 'shadow_length'), translation);
 
     {
         gl.bindBuffer(
@@ -561,10 +549,7 @@ function draw_shadow_volume(gl, render_state, camera, translation) {
         render_state.sundial.to_sun,
     );
 
-    gl.uniform1f(
-        gl.getUniformLocation(shader, 'shadow_length'),
-        translation,
-    );
+    gl.uniform1f(gl.getUniformLocation(shader, 'shadow_length'), translation);
 
     {
         gl.bindBuffer(
@@ -655,12 +640,22 @@ function draw_to_canvas(gl, render_state, camera) {
         gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.INCR_WRAP, gl.KEEP);
         gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.DECR_WRAP, gl.KEEP);
 
-        draw_shadow_volume(gl, render_state, camera, render_state.sundial.shadow_length);
+        draw_shadow_volume(
+            gl,
+            render_state,
+            camera,
+            render_state.sundial.shadow_length,
+        );
 
         gl.frontFace(gl.CW);
         draw_shadow_caps(gl, render_state, camera, 0);
         gl.frontFace(gl.CCW);
-        draw_shadow_caps(gl, render_state, camera, render_state.sundial.shadow_length);
+        draw_shadow_caps(
+            gl,
+            render_state,
+            camera,
+            render_state.sundial.shadow_length,
+        );
 
         gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.KEEP);
         gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.KEEP);
@@ -716,8 +711,8 @@ function main() {
             shadow_cap_mesh: null,
             shadow_cap_program: shaders.shadow_cap_shader(gl),
 
-            to_sun:// to_sun,
-        [Math.SQRT1_2, 0, Math.SQRT1_2],
+            // to_sun,
+            to_sun: [Math.SQRT1_2, 0, Math.SQRT1_2],
 
             shadow_length: 20,
         },
