@@ -8,6 +8,7 @@ in vec3 secondary_normal;
 
 uniform mat4 world_to_clip;
 uniform vec3 to_sun;
+uniform float shadow_length;
 
 void main(void) {
 
@@ -17,11 +18,15 @@ void main(void) {
     if (primary_faces_sun == secondary_faces_sun) {
         gl_Position = vec4(0.f, 0.f, -1000.f, 1.f);
     } else {
+
         if (primary_faces_sun) {
             gl_Position = vec4(world_to_clip * vec4(world_position, 1.f));
         } else {
-            // point at infinity
-            gl_Position = vec4(world_to_clip * vec4(-to_sun, 0.f));
+            // point at infinity - needs depth clamping
+            // gl_Position = vec4(world_to_clip * vec4(-to_sun, 0.f));
+            vec4 translated_position
+                = vec4(world_position - shadow_length * to_sun, 1.f);
+            gl_Position = vec4(world_to_clip * translated_position);
         }
     }
 }

@@ -29,9 +29,9 @@ function mouse_based_orbit_camera() {
     const zFar = 500.0;
     const projectionMatrix = mat4.create();
 
-    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+    // mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
-    // mat4.ortho(projectionMatrix, -19.2, 19.2, -10.8, 10.8, zNear, zFar);
+    mat4.ortho(projectionMatrix, -16.0, 16.0, -12.0, 12.0, zNear, zFar);
 
     const modelViewMatrix = mat4.mul(
         mat4.create(),
@@ -166,6 +166,89 @@ function load_file(filename) {
     }
 
     console.error("couldn't load file: " + filename);
+}
+
+function make_shadow_cap_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
+
+    let positions: number[] = [];
+    let normals: number[] = [];
+    let indices: number[] = [];
+
+    for (let i = 0; i < model_mesh.indices.length; i += 3) {
+
+        let base_index = positions.length / 3;
+
+        let i1 = model_mesh.indices[i];
+        let v1 = vec3.fromValues(
+            model_mesh.vertices[i1 * 3 + 0],
+            model_mesh.vertices[i1 * 3 + 1],
+            model_mesh.vertices[i1 * 3 + 2],
+        );
+
+        let i2 = model_mesh.indices[i + 1];
+        let v2 = vec3.fromValues(
+            model_mesh.vertices[i2 * 3 + 0],
+            model_mesh.vertices[i2 * 3 + 1],
+            model_mesh.vertices[i2 * 3 + 2],
+        );
+
+        let i3 = model_mesh.indices[i + 2];
+        let v3 = vec3.fromValues(
+            model_mesh.vertices[i3 * 3 + 0],
+            model_mesh.vertices[i3 * 3 + 1],
+            model_mesh.vertices[i3 * 3 + 2],
+        );
+
+        // assume ccw triangle
+        let normal = vec3.cross(
+            vec3.create(),
+            vec3.subtract(vec3.create(), v2, v1),
+            vec3.subtract(vec3.create(), v3, v1),
+        );
+
+        vec3.normalize(normal, normal);
+
+        Array.prototype.push.apply(positions, v1);
+        Array.prototype.push.apply(positions, v2);
+        Array.prototype.push.apply(positions, v3);
+
+        Array.prototype.push.apply(normals, normal);
+        Array.prototype.push.apply(normals, normal);
+        Array.prototype.push.apply(normals, normal);
+
+        indices.push( base_index + 0, base_index + 1, base_index + 2);
+    }
+
+    const position_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    position_buffer['itemSize'] = 3;
+
+    const normal_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normal_buffer);
+    gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(normals),
+        gl.STATIC_DRAW,
+    );
+    normal_buffer['itemSize'] = 3;
+
+    const index_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(indices),
+        gl.STATIC_DRAW,
+    );
+    index_buffer['numItems'] = indices.length;
+
+    let result = {
+        vertexBuffer: position_buffer,
+        indexBuffer: index_buffer,
+        normalBuffer: normal_buffer,
+    };
+
+    return result;
 }
 
 function make_shadow_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
@@ -331,7 +414,7 @@ function populate_meshes(gl, render_state, obj_string) {
     var mesh = new Mesh(obj_string);
     render_state.sundial.mesh = initMeshBuffers(gl, mesh);
     render_state.sundial.shadow_mesh = make_shadow_mesh(gl, mesh);
-    // TODO populate shadow_cap_mesh
+    render_state.sundial.shadow_cap_mesh = make_shadow_cap_mesh(gl, mesh);
 }
 
 function setup_filepicker(gl, render_state) {
@@ -350,37 +433,7 @@ function setup_filepicker(gl, render_state) {
     };
 }
 
-// OK how do the stencil shadows work again?
-//
-// I create a little triangular prism for every triangle in the mesh.
-// (can do this with instanced rendering? or just the hard way)
-//
-// need the normals to be correct for this!
-//
-// clear the stencil buffer
-// draw all the shadow prism fronts, increment-wrap-ing the stencil on Z-fail
-// draw all the shadow prism backs, decrement-wrap-ing the stencil on Z-fail
-//
-// draw the fully lit scene wherever the stencil is 0
-
-// how do I make the shadow volumes?
-// make two copies of the vertex position information
-// one extra piece of data, determining what end the vertices are at
-// go through each triple of index data
-//
-// really we'll need per-face normals, will have to precalculate those
-// can I do it differently? like the sun end and the not-sun end?
-
-// alternative: can I just draw the shadow edges?
-// put stuff on the GPU for each edge,
-// with the face normals from each side
-// (this is a lot less stuff)
-
-// can I raytrace the shadows (in WebGL?) yes it would be lols do that next
-
-// 8 triangles of shadow volume per triangle of sundial? can we do better?
-
-function draw_sundial(gl, render_state, camera) {
+function draw_sundial(gl, render_state, camera, brightness) {
     let shader = render_state.sundial.program;
 
     gl.useProgram(shader);
@@ -389,6 +442,11 @@ function draw_sundial(gl, render_state, camera) {
         gl.getUniformLocation(shader, 'world_to_clip'),
         false,
         camera.world_to_clip,
+    );
+
+    gl.uniform1f(
+        gl.getUniformLocation(shader, 'brightness'),
+        brightness
     );
 
     gl.bindBuffer(gl.ARRAY_BUFFER, render_state.sundial.mesh.vertexBuffer);
@@ -417,7 +475,77 @@ function draw_sundial(gl, render_state, camera) {
     );
 }
 
-function draw_shadow_volume(gl, render_state, camera) {
+function draw_shadow_caps(gl, render_state, camera, translation) {
+    let shader = render_state.sundial.shadow_cap_program;
+
+    gl.useProgram(shader);
+
+    gl.uniformMatrix4fv(
+        gl.getUniformLocation(shader, 'world_to_clip'),
+        false,
+        camera.world_to_clip,
+    );
+
+    gl.uniform3fv(
+        gl.getUniformLocation(shader, 'to_sun'),
+        render_state.sundial.to_sun,
+    );
+
+    gl.uniform1f(
+        gl.getUniformLocation(shader, 'shadow_length'),
+        translation,
+    );
+
+    {
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            render_state.sundial.shadow_cap_mesh.vertexBuffer,
+        );
+
+        const pos_attr = gl.getAttribLocation(shader, 'world_position');
+        gl.enableVertexAttribArray(pos_attr);
+        gl.vertexAttribPointer(
+            pos_attr,
+            render_state.sundial.shadow_cap_mesh.vertexBuffer.itemSize,
+            gl.FLOAT,
+            false,
+            0,
+            0,
+        );
+    }
+
+    {
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            render_state.sundial.shadow_cap_mesh.normalBuffer,
+        );
+
+        const pos_attr = gl.getAttribLocation(shader, 'normal');
+        gl.enableVertexAttribArray(pos_attr);
+        gl.vertexAttribPointer(
+            pos_attr,
+            render_state.sundial.shadow_cap_mesh.normalBuffer.itemSize,
+            gl.FLOAT,
+            false,
+            0,
+            0,
+        );
+    }
+
+    gl.bindBuffer(
+        gl.ELEMENT_ARRAY_BUFFER,
+        render_state.sundial.shadow_cap_mesh.indexBuffer,
+    );
+
+    gl.drawElements(
+        gl.TRIANGLES,
+        render_state.sundial.shadow_cap_mesh.indexBuffer.numItems,
+        gl.UNSIGNED_SHORT,
+        0,
+    );
+}
+
+function draw_shadow_volume(gl, render_state, camera, translation) {
     let shader = render_state.sundial.shadow_program;
 
     gl.useProgram(shader);
@@ -430,8 +558,12 @@ function draw_shadow_volume(gl, render_state, camera) {
 
     gl.uniform3fv(
         gl.getUniformLocation(shader, 'to_sun'),
-        // render_state.sundial.to_sun,
-        [Math.SQRT1_2, 0, Math.SQRT1_2],
+        render_state.sundial.to_sun,
+    );
+
+    gl.uniform1f(
+        gl.getUniformLocation(shader, 'shadow_length'),
+        translation,
     );
 
     {
@@ -502,7 +634,7 @@ function draw_shadow_volume(gl, render_state, camera) {
 }
 
 function draw_to_canvas(gl, render_state, camera) {
-    gl.clearColor(0.0, 0.0, 0.5, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
     gl.enable(gl.STENCIL_TEST);
@@ -515,7 +647,7 @@ function draw_to_canvas(gl, render_state, camera) {
         gl.colorMask(false, false, false, false); // don't update colors
 
         // fill the depth buffer
-        draw_sundial(gl, render_state, camera);
+        draw_sundial(gl, render_state, camera, 0);
 
         gl.depthMask(false); // no more writing to the depth buffer
 
@@ -523,32 +655,27 @@ function draw_to_canvas(gl, render_state, camera) {
         gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.INCR_WRAP, gl.KEEP);
         gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.DECR_WRAP, gl.KEEP);
 
-        draw_shadow_volume(gl, render_state, camera);
-        // TODO we also need to draw the sundial itself for putting caps on
-        // the volumes
-        // need to draw ONLY the faces with normals pointing away
-        // build another mesh and some more shaders
+        draw_shadow_volume(gl, render_state, camera, render_state.sundial.shadow_length);
 
-        // shadow_cap_mesh
-        // shadow_cap_shader
+        gl.frontFace(gl.CW);
+        draw_shadow_caps(gl, render_state, camera, 0);
+        gl.frontFace(gl.CCW);
+        draw_shadow_caps(gl, render_state, camera, render_state.sundial.shadow_length);
 
-        // somehow flip the triangles for BACK/FRONT stuff? (gl.frontFace)
-        // so shadow_cap_mesh is just triangle soup with flat normals
-        // shader draws only the away-from-the-light ones, and translates them
-        // away from the light some given amount
-
-        // I'm probably going to want caps at both ends
-
-        gl.stencilFunc(gl.EQUAL, 0, 0xff);
         gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.KEEP);
         gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.KEEP);
 
         gl.colorMask(true, true, true, true); // update colors
 
         gl.depthFunc(gl.EQUAL);
-        draw_sundial(gl, render_state, camera); // draw for real now
 
-        gl.depthMask(true); // no more writing to the depth buffer
+        gl.stencilFunc(gl.NOTEQUAL, 0, 0xff);
+        draw_sundial(gl, render_state, camera, 0.1); // draw shady bit
+
+        gl.stencilFunc(gl.EQUAL, 0, 0xff);
+        draw_sundial(gl, render_state, camera, 1); // draw sunny bit
+
+        gl.depthMask(true); // unmask depth buffer
     }
 }
 
@@ -589,7 +716,10 @@ function main() {
             shadow_cap_mesh: null,
             shadow_cap_program: shaders.shadow_cap_shader(gl),
 
-            to_sun: to_sun,
+            to_sun:// to_sun,
+        [Math.SQRT1_2, 0, Math.SQRT1_2],
+
+            shadow_length: 20,
         },
     };
 
@@ -622,7 +752,7 @@ function main() {
 //
 // [X] shadow volume extrusion
 //
-// [ ] stencil shadows
+// [X] stencil shadows
 //
 // [ ] render textures
 //
