@@ -146,7 +146,7 @@ function setup_camera_controls() {
 
 function setup_webgl() {
     const canvas = document.querySelector('#gl_canvas') as HTMLCanvasElement;
-    const gl = canvas.getContext('webgl2');
+    const gl = canvas.getContext('webgl2', {stencil:true});
 
     if (!gl) {
         alert('No WebGL2!');
@@ -228,7 +228,7 @@ function make_shadow_mesh(gl : WebGLRenderingContext, model_mesh : Mesh) {
         let v1 = edges[edge][2];
         let v2 = edges[edge][3];
 
-        let base_index = positions.length;
+        let base_index = positions.length / 3;
 
         Array.prototype.push.apply(positions, v1);
         Array.prototype.push.apply(positions, v1);
@@ -259,10 +259,39 @@ function make_shadow_mesh(gl : WebGLRenderingContext, model_mesh : Mesh) {
                      base_index + 1, base_index + 3, base_index + 2);
     }
 
-    console.log(indices);
-    console.log(positions);
-    console.log(primary_normal);
-    console.log(secondary_normal);
+    // console.log(indices);
+    // console.log(positions);
+    // console.log(primary_normal);
+    // console.log(secondary_normal);
+
+    const position_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, position_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    position_buffer["itemSize"] = 3;
+
+    const primary_normal_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, primary_normal_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(primary_normal), gl.STATIC_DRAW);
+    primary_normal_buffer["itemSize"] = 3;
+
+    const secondary_normal_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, secondary_normal_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(secondary_normal), gl.STATIC_DRAW);
+    secondary_normal_buffer["itemSize"] = 3;
+
+    const index_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+    index_buffer["numItems"] = indices.length;
+
+    let result = {
+        vertexBuffer: position_buffer,
+        indexBuffer: index_buffer,
+        primaryNormalBuffer: primary_normal_buffer,
+        secondaryNormalBuffer: secondary_normal_buffer,
+    };
+
+    return result;
 }
 
 function populate_meshes(gl, render_state, obj_string) {
@@ -317,20 +346,14 @@ function setup_filepicker(gl, render_state) {
 
 // 8 triangles of shadow volume per triangle of sundial? can we do better?
 
-function draw_to_canvas(gl, render_state, camera) {
-    gl.clearColor(0.0, 0.0, 0.5, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+function draw_sundial(gl, render_state, camera) {
 
-    gl.enable(gl.DEPTH_TEST);
+    let shader = render_state.sundial.program;
 
-    if (render_state.sundial.mesh == null) {
-        return;
-    }
-
-    gl.useProgram(render_state.sundial.program);
+    gl.useProgram(shader);
 
     gl.uniformMatrix4fv(
-        gl.getUniformLocation(render_state.sundial.program, 'world_to_clip'),
+        gl.getUniformLocation(shader, 'world_to_clip'),
         false,
         camera.world_to_clip,
     );
@@ -338,7 +361,7 @@ function draw_to_canvas(gl, render_state, camera) {
     gl.bindBuffer(gl.ARRAY_BUFFER, render_state.sundial.mesh.vertexBuffer);
 
     const pos_attr = gl.getAttribLocation(
-        render_state.sundial.program,
+        shader,
         'world_position',
     );
     gl.enableVertexAttribArray(pos_attr);
@@ -364,6 +387,145 @@ function draw_to_canvas(gl, render_state, camera) {
     );
 }
 
+function draw_shadow_volume(gl, render_state, camera) {
+
+    let shader = render_state.sundial.shadow_program;
+
+    gl.useProgram(shader);
+
+    gl.uniformMatrix4fv(
+        gl.getUniformLocation(shader, 'world_to_clip'),
+        false,
+        camera.world_to_clip,
+    );
+
+    gl.uniform3fv(
+        gl.getUniformLocation(shader, 'to_sun'),
+        // render_state.sundial.to_sun,
+        [Math.SQRT1_2, 0, Math.SQRT1_2],
+    );
+
+    {
+    gl.bindBuffer(gl.ARRAY_BUFFER, render_state.sundial.shadow_mesh.vertexBuffer);
+
+    const pos_attr = gl.getAttribLocation(
+        shader,
+        'world_position',
+    );
+    gl.enableVertexAttribArray(pos_attr);
+    gl.vertexAttribPointer(
+        pos_attr,
+        render_state.sundial.shadow_mesh.vertexBuffer.itemSize,
+        gl.FLOAT,
+        false,
+        0,
+        0,
+    );
+    }
+
+    {
+    gl.bindBuffer(gl.ARRAY_BUFFER,
+                  render_state.sundial.shadow_mesh.primaryNormalBuffer);
+
+    const pos_attr = gl.getAttribLocation(
+        shader,
+        'primary_normal',
+    );
+    gl.enableVertexAttribArray(pos_attr);
+    gl.vertexAttribPointer(
+        pos_attr,
+        render_state.sundial.shadow_mesh.primaryNormalBuffer.itemSize,
+        gl.FLOAT,
+        false,
+        0,
+        0,
+    );
+    }
+
+    {
+    gl.bindBuffer(gl.ARRAY_BUFFER,
+                  render_state.sundial.shadow_mesh.secondaryNormalBuffer);
+
+    const pos_attr = gl.getAttribLocation(
+        shader,
+        'secondary_normal',
+    );
+    gl.enableVertexAttribArray(pos_attr);
+    gl.vertexAttribPointer(
+        pos_attr,
+        render_state.sundial.shadow_mesh.secondaryNormalBuffer.itemSize,
+        gl.FLOAT,
+        false,
+        0,
+        0,
+    );
+    }
+
+    gl.bindBuffer(
+        gl.ELEMENT_ARRAY_BUFFER,
+        render_state.sundial.shadow_mesh.indexBuffer,
+    );
+
+    gl.drawElements(
+        gl.TRIANGLES,
+        render_state.sundial.shadow_mesh.indexBuffer.numItems,
+        gl.UNSIGNED_SHORT,
+        0,
+    );
+}
+
+function draw_to_canvas(gl, render_state, camera) {
+
+    gl.clearColor(0.0, 0.0, 0.5, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+
+    gl.enable(gl.STENCIL_TEST);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LESS);
+
+    // gl.enable(gl.CULL_FACE);
+
+    if (render_state.sundial.mesh != null) {
+
+        gl.colorMask(false, false, false, false); // don't update colors
+
+        // fill the depth buffer
+        draw_sundial(gl, render_state, camera);
+
+        gl.depthMask(false); // no more writing to the depth buffer
+
+        gl.stencilFunc(gl.ALWAYS, 0, 0);
+        gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.INCR_WRAP, gl.KEEP);
+        gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.DECR_WRAP, gl.KEEP);
+
+        draw_shadow_volume(gl, render_state, camera);
+        // TODO we also need to draw the sundial itself for putting caps on the volumes
+        // need to draw ONLY the faces with normals pointing away
+        // build another mesh and some more shaders
+
+        // shadow_cap_mesh
+        // shadow_cap_shader
+
+        // somehow flip the triangles for BACK/FRONT stuff? (gl.frontFace)
+        // so shadow_cap_mesh is just triangle soup with flat normals
+        // shader draws only the away-from-the-light ones, and translates them
+        // away from the light some given amount
+
+        // I'm probably going to want caps at both ends
+
+        gl.stencilFunc(gl.EQUAL, 0, 0xff);
+        gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.KEEP);
+        gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.KEEP);
+
+        gl.colorMask(true, true, true, true); // update colors
+
+        gl.depthFunc(gl.EQUAL);
+        draw_sundial(gl, render_state, camera); // draw for real now
+
+        gl.depthMask(true); // no more writing to the depth buffer
+    }
+}
+
 function vector_to_sun(altitude, azimuth) {
     let x = -Math.sin(azimuth);
     let y = -Math.cos(azimuth);
@@ -387,17 +549,16 @@ function main() {
     let sun_position_element = document.querySelector('#sun-pos');
     sun_position_element.textContent = JSON.stringify(sun_pos);
 
-    console.log(
-        'vector to sun: ',
-        vector_to_sun(sun_pos.altitude, sun_pos.azimuth),
-    );
+    let to_sun = vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
+    console.log( 'vector to sun: ', to_sun);
 
     let render_state = {
         sundial: {
             mesh: null,
             shadow_mesh: null,
             program: shaders.sundial_shader(gl),
-            shadow_program: shaders.sundial_shader(gl),
+            shadow_program: shaders.shadow_shader(gl),
+            to_sun: to_sun,
         },
     };
 
@@ -428,7 +589,7 @@ function main() {
 //
 // [X] camera controls
 //
-// [ ] shadow volume extrusion
+// [X] shadow volume extrusion
 //
 // [ ] stencil shadows
 //

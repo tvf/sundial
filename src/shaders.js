@@ -1,6 +1,9 @@
 import sundial_vert from './shaders/sundial.vert';
 import sundial_frag from './shaders/sundial.frag';
 
+import shadow_vert from './shaders/shadow.vert';
+import shadow_frag from './shaders/shadow.frag';
+
 function init_shader_program(gl, v_source, f_source) {
     const v_shader = load_shader(gl, gl.VERTEX_SHADER, v_source);
     const f_shader = load_shader(gl, gl.FRAGMENT_SHADER, f_source);
@@ -34,4 +37,8 @@ function load_shader(gl, type, source) {
 
 export function sundial_shader(gl) {
     return init_shader_program(gl, sundial_vert, sundial_frag);
+}
+
+export function shadow_shader(gl) {
+    return init_shader_program(gl, shadow_vert, shadow_frag);
 }
