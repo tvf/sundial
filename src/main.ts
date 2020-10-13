@@ -49,7 +49,7 @@ function mouse_based_orbit_camera() {
 }
 
 function setup_camera_controls() {
-    const canvas = document.querySelector('#gl_canvas');
+    const canvas = document.querySelector('#gl_canvas') as HTMLCanvasElement;
 
     var handle_keydown = function (event) {
         if (event.keyCode === 16 || event.charCode === 16) {
@@ -412,12 +412,17 @@ function populate_meshes(gl, render_state, obj_string) {
     render_state.sundial.shadow_cap_mesh = make_shadow_cap_mesh(gl, mesh);
 }
 
+interface HTMLInputEvent extends Event {
+    target: HTMLInputElement & EventTarget;
+}
+
 function setup_filepicker(gl, render_state) {
-    var file_selection = document.querySelector('#sundial-obj');
+    var file_selection = document.querySelector('#sundial-obj') as HTMLInputElement;
 
     populate_meshes(gl, render_state, load_file(test_dial));
 
-    file_selection.oninput = function (event) {
+    file_selection.oninput = function (event : HTMLInputEvent) {
+
         var reader = new FileReader();
 
         reader.onload = function (filecontents) {
@@ -748,8 +753,7 @@ function main() {
             shadow_cap_mesh: null,
             shadow_cap_program: shaders.shadow_cap_shader(gl),
 
-            // to_sun,
-            to_sun: [Math.SQRT1_2, 0, Math.SQRT1_2],
+            to_sun: vec3.fromValues(Math.SQRT1_2, 0, Math.SQRT1_2),
 
             shadow_length: 20,
         },
