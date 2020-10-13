@@ -157,18 +157,6 @@ function setup_webgl() {
     return gl;
 }
 
-function load_file(filename) {
-    var request = new XMLHttpRequest();
-    request.open('GET', filename, false); // `false` makes the request synchronous
-    request.send(null);
-
-    if (request.status === 200) {
-        return request.responseText;
-    }
-
-    console.error("couldn't load file: " + filename);
-}
-
 function make_shadow_cap_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
     let positions: number[] = [];
     let normals: number[] = [];
@@ -419,7 +407,7 @@ interface HTMLInputEvent extends Event {
 function setup_filepicker(gl, render_state) {
     var file_selection = document.querySelector('#sundial-obj') as HTMLInputElement;
 
-    populate_meshes(gl, render_state, load_file(test_dial));
+    populate_meshes(gl, render_state, test_dial);
 
     file_selection.oninput = function (event : HTMLInputEvent) {
 
