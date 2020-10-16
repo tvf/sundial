@@ -405,12 +405,13 @@ interface HTMLInputEvent extends Event {
 }
 
 function setup_filepicker(gl, render_state) {
-    var file_selection = document.querySelector('#sundial-obj') as HTMLInputElement;
+    var file_selection = document.querySelector(
+        '#sundial-obj',
+    ) as HTMLInputElement;
 
     populate_meshes(gl, render_state, test_dial);
 
-    file_selection.oninput = function (event : HTMLInputEvent) {
-
+    file_selection.oninput = function (event: HTMLInputEvent) {
         var reader = new FileReader();
 
         reader.onload = function (filecontents) {
@@ -618,7 +619,6 @@ function draw_shadow_volume(gl, render_state, camera, translation) {
 }
 
 function draw_to_canvas(gl, render_state, camera) {
-
     if (render_state.sundial.to_sun[2] < 0) {
         gl.clearColor(0.0, 0.0, 0.2, 1.0);
     } else {
@@ -634,53 +634,51 @@ function draw_to_canvas(gl, render_state, camera) {
     // gl.enable(gl.CULL_FACE);
 
     if (render_state.sundial.mesh != null) {
-
         if (render_state.sundial.to_sun[2] < 0) {
             draw_sundial(gl, render_state, camera, 0.1); // draw shady bit
         } else {
+            gl.colorMask(false, false, false, false); // don't update colors
 
-        gl.colorMask(false, false, false, false); // don't update colors
+            // fill the depth buffer
+            draw_sundial(gl, render_state, camera, 0);
 
-        // fill the depth buffer
-        draw_sundial(gl, render_state, camera, 0);
+            gl.depthMask(false); // no more writing to the depth buffer
 
-        gl.depthMask(false); // no more writing to the depth buffer
+            gl.stencilFunc(gl.ALWAYS, 0, 0);
+            gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.INCR_WRAP, gl.KEEP);
+            gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.DECR_WRAP, gl.KEEP);
 
-        gl.stencilFunc(gl.ALWAYS, 0, 0);
-        gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.INCR_WRAP, gl.KEEP);
-        gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.DECR_WRAP, gl.KEEP);
+            draw_shadow_volume(
+                gl,
+                render_state,
+                camera,
+                render_state.sundial.shadow_length,
+            );
 
-        draw_shadow_volume(
-            gl,
-            render_state,
-            camera,
-            render_state.sundial.shadow_length,
-        );
+            gl.frontFace(gl.CW);
+            draw_shadow_caps(gl, render_state, camera, 0);
+            gl.frontFace(gl.CCW);
+            draw_shadow_caps(
+                gl,
+                render_state,
+                camera,
+                render_state.sundial.shadow_length,
+            );
 
-        gl.frontFace(gl.CW);
-        draw_shadow_caps(gl, render_state, camera, 0);
-        gl.frontFace(gl.CCW);
-        draw_shadow_caps(
-            gl,
-            render_state,
-            camera,
-            render_state.sundial.shadow_length,
-        );
+            gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.KEEP);
+            gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.KEEP);
 
-        gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.KEEP);
-        gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.KEEP);
+            gl.colorMask(true, true, true, true); // update colors
 
-        gl.colorMask(true, true, true, true); // update colors
+            gl.depthFunc(gl.EQUAL);
 
-        gl.depthFunc(gl.EQUAL);
+            gl.stencilFunc(gl.NOTEQUAL, 0, 0xff);
+            draw_sundial(gl, render_state, camera, 0.1); // draw shady bit
 
-        gl.stencilFunc(gl.NOTEQUAL, 0, 0xff);
-        draw_sundial(gl, render_state, camera, 0.1); // draw shady bit
+            gl.stencilFunc(gl.EQUAL, 0, 0xff);
+            draw_sundial(gl, render_state, camera, 1); // draw sunny bit
 
-        gl.stencilFunc(gl.EQUAL, 0, 0xff);
-        draw_sundial(gl, render_state, camera, 1); // draw sunny bit
-
-        gl.depthMask(true); // unmask depth buffer
+            gl.depthMask(true); // unmask depth buffer
         }
     }
 }
@@ -696,7 +694,6 @@ function vector_to_sun(altitude, azimuth) {
 }
 
 function sun_position_for_time(now) {
-
     // now is in ms since the animation began
 
     let latitude = 52;
@@ -704,8 +701,8 @@ function sun_position_for_time(now) {
 
     let sun_pos = SunCalc.getPosition(now, latitude, longitude);
 
-//    let sun_position_element = document.querySelector('#sun-pos');
-//    sun_position_element.textContent = JSON.stringify(sun_pos);
+    //    let sun_position_element = document.querySelector('#sun-pos');
+    //    sun_position_element.textContent = JSON.stringify(sun_pos);
 
     let time_element = document.querySelector('#time');
     let date = new Date(now);
@@ -724,8 +721,8 @@ function main() {
 
     let sun_pos = SunCalc.getPosition(today, latitude, longitude);
 
-//     let sun_position_element = document.querySelector('#sun-pos');
-//     sun_position_element.textContent = JSON.stringify(sun_pos);
+    //     let sun_position_element = document.querySelector('#sun-pos');
+    //     sun_position_element.textContent = JSON.stringify(sun_pos);
 
     let to_sun = vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
     console.log('vector to sun: ', to_sun);
@@ -750,14 +747,13 @@ function main() {
     setup_filepicker(gl, render_state);
 
     function render(now) {
-
         let camera = mouse_based_orbit_camera();
 
         render_state.sundial.to_sun = sun_position_for_time(24 * 60 * 6 * now);
 
         // if (dirty) {
-            draw_to_canvas(gl, render_state, camera);
-            dirty = false;
+        draw_to_canvas(gl, render_state, camera);
+        dirty = false;
         // }
 
         requestAnimationFrame(render);
