@@ -25,8 +25,8 @@ var dirty = true;
 function mouse_based_orbit_camera() {
     const fieldOfView = (45 * Math.PI) / 180; // in radians
     const aspect = 640 / 480;
-    const zNear = 4;
-    const zFar = 500.0;
+    const zNear = 10;
+    const zFar = 2000.0;
     const projectionMatrix = mat4.create();
 
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
@@ -303,10 +303,17 @@ function make_shadow_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
     let indices: number[] = [];
 
     for (const edge in edges) {
+
         let i1 = edges[edge][0];
         let i2 = edges[edge][1];
         let v1 = edges[edge][2];
         let v2 = edges[edge][3];
+
+        let interesting_edge = false;
+        if (v1[0] == -32 && v1[2] == 3 && v2[0] == -32 && v2[2] == 3) {
+            console.log(v1, v2);
+            interesting_edge = true;
+        }
 
         let base_index = positions.length / 3;
 
@@ -324,6 +331,10 @@ function make_shadow_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
         if (triangle_normals_by_edge_indices.hasOwnProperty(i2 + ' ' + i1)) {
             secondary_normal_12 =
                 triangle_normals_by_edge_indices[i2 + ' ' + i1];
+        }
+
+        if (interesting_edge) {
+            console.log(primary_normal_12, secondary_normal_12);
         }
 
         Array.prototype.push.apply(primary_normal, primary_normal_12);
@@ -380,7 +391,8 @@ function make_shadow_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
         gl.ELEMENT_ARRAY_BUFFER,
         new Uint32Array(indices),
         gl.STATIC_DRAW,
-    );
+    ); // 2^16 = 64K
+    console.log(indices.length);
     index_buffer['numItems'] = indices.length;
 
     let result = {
@@ -696,7 +708,7 @@ function vector_to_sun(altitude, azimuth) {
 function sun_position_for_time(now) {
     // now is in ms since the animation began
 
-    let latitude = 52;
+    let latitude = 0; // 52;
     let longitude = 0;
 
     let sun_pos = SunCalc.getPosition(now, latitude, longitude);
@@ -708,7 +720,10 @@ function sun_position_for_time(now) {
     let date = new Date(now);
     time_element.textContent = date.toDateString() + ' ' + date.toTimeString();
 
-    return vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
+    let ret = vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
+    ret[1] = 0.01;
+
+    return ret;
 }
 
 function main() {
@@ -716,7 +731,7 @@ function main() {
     setup_camera_controls();
 
     let today = new Date();
-    let latitude = 52;
+    let latitude = 0; // 52;
     let longitude = 0;
 
     let sun_pos = SunCalc.getPosition(today, latitude, longitude);
@@ -738,9 +753,11 @@ function main() {
             shadow_cap_mesh: null,
             shadow_cap_program: shaders.shadow_cap_shader(gl),
 
-            to_sun: vec3.fromValues(Math.SQRT1_2, 0, Math.SQRT1_2),
+            to_sun: vec3.fromValues(Math.SQRT1_2 * Math.SQRT1_2,
+                                    Math.SQRT1_2 * Math.SQRT1_2,
+                                    Math.SQRT1_2),
 
-            shadow_length: 20,
+            shadow_length: 200,
         },
     };
 
@@ -749,12 +766,15 @@ function main() {
     function render(now) {
         let camera = mouse_based_orbit_camera();
 
-        render_state.sundial.to_sun = sun_position_for_time(24 * 60 * 6 * now);
+        if (true) {
+            render_state.sundial.to_sun = sun_position_for_time(24 * 60 * 6 * now);
+            dirty = true;
+        }
 
-        // if (dirty) {
-        draw_to_canvas(gl, render_state, camera);
-        dirty = false;
-        // }
+        if (dirty) {
+            draw_to_canvas(gl, render_state, camera);
+            dirty = false;
+        }
 
         requestAnimationFrame(render);
     }
