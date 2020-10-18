@@ -220,7 +220,7 @@ function make_shadow_cap_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
     gl.bufferData(
         gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(indices),
+        new Uint32Array(indices),
         gl.STATIC_DRAW,
     );
     index_buffer['numItems'] = indices.length;
@@ -378,7 +378,7 @@ function make_shadow_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
     gl.bufferData(
         gl.ELEMENT_ARRAY_BUFFER,
-        new Uint16Array(indices),
+        new Uint32Array(indices),
         gl.STATIC_DRAW,
     );
     index_buffer['numItems'] = indices.length;
@@ -528,7 +528,7 @@ function draw_shadow_caps(gl, render_state, camera, translation) {
     gl.drawElements(
         gl.TRIANGLES,
         render_state.sundial.shadow_cap_mesh.indexBuffer.numItems,
-        gl.UNSIGNED_SHORT,
+        gl.UNSIGNED_INT,
         0,
     );
 }
@@ -613,7 +613,7 @@ function draw_shadow_volume(gl, render_state, camera, translation) {
     gl.drawElements(
         gl.TRIANGLES,
         render_state.sundial.shadow_mesh.indexBuffer.numItems,
-        gl.UNSIGNED_SHORT,
+        gl.UNSIGNED_INT,
         0,
     );
 }
