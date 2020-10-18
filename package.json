@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "parcel src/index.html",
         "build": "parcel build src/index.html",
+        "build:prod": "parcel build src/index.html --public-url https://tvf.github.io/sundial",
         "format": "prettier --write ./**/*.{json,html,js,ts}"
     },
     "devDependencies": {
