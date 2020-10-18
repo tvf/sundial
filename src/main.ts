@@ -26,7 +26,7 @@ function mouse_based_orbit_camera() {
     const fieldOfView = (45 * Math.PI) / 180; // in radians
     const aspect = 640 / 480;
     const zNear = 4;
-    const zFar = 500.0;
+    const zFar = 2000.0;
     const projectionMatrix = mat4.create();
 
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
@@ -699,16 +699,21 @@ function sun_position_for_time(now) {
     let latitude = 52;
     let longitude = 0;
 
-    let sun_pos = SunCalc.getPosition(now, latitude, longitude);
+    let date = new Date();
+    date.setHours(10);
+    date.setMinutes(45);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
 
-    //    let sun_position_element = document.querySelector('#sun-pos');
-    //    sun_position_element.textContent = JSON.stringify(sun_pos);
+    let sun_pos = SunCalc.getPosition(date, latitude, longitude);
 
     let time_element = document.querySelector('#time');
-    let date = new Date(now);
+    let to_sun = vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
+
     time_element.textContent = date.toDateString() + ' ' + date.toTimeString();
 
-    return vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
+    return vec3.fromValues(0.18, 0.01, 0.7);
+    // return to_sun;
 }
 
 function main() {
@@ -740,7 +745,7 @@ function main() {
 
             to_sun: vec3.fromValues(Math.SQRT1_2, 0, Math.SQRT1_2),
 
-            shadow_length: 20,
+            shadow_length: 200,
         },
     };
 
