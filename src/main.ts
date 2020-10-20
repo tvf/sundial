@@ -22,9 +22,15 @@ var middle_mouse_is_down = false;
 var shift_is_down = false;
 var dirty = true;
 
-function mouse_based_orbit_camera() {
+function mouse_based_orbit_camera(gl) {
     const fieldOfView = (45 * Math.PI) / 180; // in radians
-    const aspect = 640 / 480;
+
+    gl.canvas.width = gl.canvas.clientWidth;
+    gl.canvas.height = gl.canvas.clientHeight;
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
+
+    //const aspect = 640 / 480;
     const zNear = 4;
     const zFar = 2000.0;
     const projectionMatrix = mat4.create();
@@ -752,7 +758,7 @@ function main() {
     setup_filepicker(gl, render_state);
 
     function render(now) {
-        let camera = mouse_based_orbit_camera();
+        let camera = mouse_based_orbit_camera(gl);
 
         render_state.sundial.to_sun = sun_position_for_time(24 * 60 * 6 * now);
 

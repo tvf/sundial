@@ -4,7 +4,7 @@
         <title>Sundial Simulator</title>
     </head>
 
-    <body>
+    <body style="margin: 0">
         <pre
             id="time"
             style="
@@ -15,9 +15,9 @@
                 font-family: monospace;
             "
         ></pre>
-        <canvas id="gl_canvas" width="640" height="480"></canvas>
-        <div>
-            <input type="file" id="sundial-obj" name="sundial-obj" />
+        <canvas style="width: 100%; height:100%" id="gl_canvas"></canvas>
+        <div style="position: fixed; bottom: 0; width:100%; text-align:center">
+            <input type="file" id="sundial-obj" name="sundial-obj"/>
         </div>
         <!--<div><span id="time"></span></div>
         <div>
