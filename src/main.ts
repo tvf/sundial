@@ -399,8 +399,8 @@ function make_shadow_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
     return result;
 }
 
-function populate_meshes(gl, render_state, obj_string) {
-    var mesh = new Mesh(obj_string);
+function populate_meshes(gl, render_state, obj_string : string) {
+    let mesh = new Mesh(obj_string);
     render_state.sundial.mesh = initMeshBuffers(gl, mesh);
     render_state.sundial.shadow_mesh = make_shadow_mesh(gl, mesh);
     render_state.sundial.shadow_cap_mesh = make_shadow_cap_mesh(gl, mesh);
@@ -421,7 +421,7 @@ function setup_filepicker(gl, render_state) {
         var reader = new FileReader();
 
         reader.onload = function (filecontents) {
-            populate_meshes(gl, render_state, filecontents.target.result);
+            populate_meshes(gl, render_state, filecontents.target.result as string);
         };
 
         reader.readAsText(event.target.files[0]);
