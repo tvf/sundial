@@ -420,7 +420,7 @@ function setup_filepicker(gl, render_state) {
     file_selection.oninput = function (event: HTMLInputEvent) {
         var reader = new FileReader();
 
-        reader.onload = function (filecontents) {
+        reader.onload = function (filecontents : ProgressEvent<FileReader>) {
             populate_meshes(gl, render_state, filecontents.target.result as string);
         };
 
