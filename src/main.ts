@@ -1,6 +1,6 @@
 import SunCalc from 'suncalc';
 
-import { vec3, mat4, glMatrix } from 'gl-matrix';
+import { vec2, vec3, mat4, glMatrix } from 'gl-matrix';
 
 import { Mesh, initMeshBuffers } from 'webgl-obj-loader';
 
@@ -454,6 +454,89 @@ function setup_filepicker(gl, render_state) {
     };
 }
 
+function draw_ground_plane(gl, render_state, camera, brightness) {
+    let shader = render_state.sundial.ground_plane_program;
+
+    gl.useProgram(shader);
+
+    gl.uniformMatrix4fv(
+        gl.getUniformLocation(shader, 'world_to_clip'),
+        false,
+        camera.world_to_clip,
+    );
+
+    gl.uniformMatrix4fv(
+        gl.getUniformLocation(shader, 'clip_to_world'),
+        false,
+        camera.clip_to_world,
+    );
+
+    gl.uniform1f(gl.getUniformLocation(shader, 'brightness'), brightness);
+
+    let viewport = vec2.fromValues(gl.canvas.width, gl.canvas.height);
+    gl.uniform2fv(gl.getUniformLocation(shader, 'viewport'), viewport);
+
+    // Tell WebGL how to pull out the positions from the position
+    // buffer into the vertexPosition attribute
+    {
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            render_state.sundial.screenspace_triangles.position,
+        );
+        const pos_attr = gl.getAttribLocation(shader, 'world_position');
+        gl.enableVertexAttribArray(pos_attr);
+
+        gl.vertexAttribPointer(pos_attr, 3, gl.FLOAT, false, 0, 0);
+    }
+
+    gl.bindBuffer(
+        gl.ELEMENT_ARRAY_BUFFER,
+        render_state.sundial.screenspace_triangles.indices,
+    );
+
+    {
+        const vertexCount = render_state.sundial.screenspace_triangles.count;
+        const type = gl.UNSIGNED_SHORT;
+        const offset = 0;
+        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+    }
+}
+
+function two_triangles(gl) {
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+    const positions = [
+        -1.0,
+        -1.0,
+        1.0,
+        1.0,
+        -1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        -1.0,
+        1.0,
+        1.0,
+    ];
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+    const indices = [0, 1, 2, 0, 2, 3];
+
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(indices),
+        gl.STATIC_DRAW,
+    );
+
+    return { position: positionBuffer, indices: indexBuffer, count: 6 };
+}
+
 function draw_sundial(gl, render_state, camera, brightness) {
     let shader = render_state.sundial.program;
 
@@ -692,6 +775,7 @@ function draw_to_canvas(gl, render_state, camera) {
     if (render_state.sundial.mesh != null) {
         if (render_state.sundial.to_sun[2] < 0) {
             draw_sundial(gl, render_state, camera, 0.1); // draw shady bit
+            draw_ground_plane(gl, render_state, camera, 0.1); // draw shady bit
         } else {
             gl.colorMask(false, false, false, false); // don't update colors
 
@@ -892,6 +976,9 @@ function main() {
             shadow_cap_mesh: null,
             shadow_cap_program: shaders.shadow_cap_shader(gl),
 
+            screenspace_triangles: two_triangles(gl),
+            ground_plane_program: shaders.ground_plane_shader(gl),
+
             to_sun: vec3.fromValues(Math.SQRT1_2, 0, Math.SQRT1_2),
 
             shadow_length: 200,
@@ -921,24 +1008,5 @@ function main() {
 
     requestAnimationFrame(render);
 }
-
-// implementation plan
-//
-// [X] given altitude + azimuth determine direction to sun in the
-//     X east Y north coordinate system
-//
-// [X] load an OBJ sundial
-//
-// [X] render the sundial
-//
-// [X] camera controls
-//
-// [X] shadow volume extrusion
-//
-// [X] stencil shadows
-//
-// [ ] render textures
-//
-// [ ] hook up the date time lat long controls
 
 main();

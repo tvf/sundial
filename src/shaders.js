@@ -6,6 +6,9 @@ import shadow_frag from './shaders/shadow.frag';
 
 import shadow_cap_vert from './shaders/shadow_cap.vert';
 
+import screenspace_vert from './shaders/screenspace.vert';
+import screenspace_frag from './shaders/screenspace.frag';
+
 function init_shader_program(gl, v_source, f_source) {
     const v_shader = load_shader(gl, gl.VERTEX_SHADER, v_source);
     const f_shader = load_shader(gl, gl.FRAGMENT_SHADER, f_source);
@@ -47,4 +50,8 @@ export function shadow_shader(gl) {
 
 export function shadow_cap_shader(gl) {
     return init_shader_program(gl, shadow_cap_vert, shadow_frag);
+}
+
+export function ground_plane_shader(gl) {
+    return init_shader_program(gl, screenspace_vert, screenspace_frag);
 }
