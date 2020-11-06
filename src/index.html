@@ -5,16 +5,16 @@
     </head>
 
     <body style="margin: 0; font-family: monospace">
-        <!-- <pre
-            id="time"
+        <label
+            id="nighttime"
             style="
                 position: absolute;
+                font-size:large;
                 left: 2em;
                 top: 1em;
-                color: red;
                 font-family: monospace;
             "
-        ></pre> -->
+        >NIGHTTIME</label>
         <canvas style="width: 100%; height: 100%" id="gl_canvas"></canvas>
         <div style="position: fixed; top: 0; right: 0">
             <br />
@@ -32,9 +32,9 @@
             <label>Year </label
             ><input type="number" id="year" min="-9999" max="9999" />
             <label>Month </label
-            ><input type="number" id="month" min="0" max="12" />
+            ><input type="number" id="month" min="1" max="12" />
             <label>Day </label
-            ><input type="number" id="day" min="0" max="31" />
+            ><input type="number" id="day" min="1" max="31" />
             <label>Hour </label
             ><input type="number" id="hour" min="0" max="23" />
             <label>Minute </label
@@ -43,7 +43,7 @@
             ><input type="number" id="second" min="0" max="59" />
             <br />
             <br />
-            <button>Play</button>
+            <button id="play"></button>
             <label>Speedup </label
             ><input type="number" id="speedup" min="0" max="86400" />
             <br />

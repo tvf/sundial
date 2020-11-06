@@ -17,6 +17,7 @@ var paraview_style_camera = {
 };
 
 var playing = false;
+var time_for_sun = new Date();
 
 var last_mouse_position = [0, 0];
 var mouse_is_down = false;
@@ -631,11 +632,17 @@ function draw_shadow_volume(gl, render_state, camera, translation) {
 }
 
 function draw_to_canvas(gl, render_state, camera) {
+
+    let nighttime_label = document.querySelector('#nighttime') as HTMLLabelElement;
     if (render_state.sundial.to_sun[2] < 0) {
-        gl.clearColor(0.0, 0.0, 0.2, 1.0);
+        nighttime_label.style.visibility = 'visible';
+        // gl.clearColor(0.0, 0.0, 0.2, 1.0);
     } else {
-        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+        nighttime_label.style.visibility = 'hidden';
     }
+
+
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
@@ -705,27 +712,35 @@ function vector_to_sun(altitude, azimuth) {
     return vec3.fromValues(horizontal_length * x, horizontal_length * y, z);
 }
 
-function sun_position_for_time(now) {
-    // now is in ms since the animation began
+function sun_position() {
+    let lat_long = get_lat_long_ui();
+    return sun_position_for_time(time_for_sun, lat_long[0], lat_long[1]);
+}
 
-    let latitude = 52;
-    let longitude = 0;
-
-    let date = new Date();
-    date.setHours(10);
-    date.setMinutes(45);
-    date.setSeconds(0);
-    date.setMilliseconds(0);
-
-    let sun_pos = SunCalc.getPosition(date, latitude, longitude);
-
-    // let time_element = document.querySelector('#time');
+function sun_position_for_time(time, latitude, longitude) {
+    let sun_pos = SunCalc.getPosition(time, latitude, longitude);
     let to_sun = vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
 
-    // time_element.textContent = date.toDateString() + ' ' + date.toTimeString();
+    return to_sun;
+}
 
-    return vec3.fromValues(0.18, 0.01, 0.7);
-    // return to_sun;
+function update_simulation_time(delta : number) {
+    if (playing) {
+        let ms_adjustment = delta * get_speedup_ui();
+
+        console.log(ms_adjustment);
+        console.log(delta);
+        console.log(get_speedup_ui());
+        console.log(time_for_sun.getTime());
+
+        time_for_sun.setTime(time_for_sun.getTime() + ms_adjustment);
+
+        console.log(time_for_sun.getTime());
+
+        set_date_ui(time_for_sun);
+    }
+
+    time_for_sun = get_date_ui();
 }
 
 function set_date_ui(date: Date) {
@@ -734,7 +749,7 @@ function set_date_ui(date: Date) {
     ) as HTMLInputElement).value = date.getUTCFullYear().toString();
     (document.querySelector(
         '#month',
-    ) as HTMLInputElement).value = date.getUTCMonth().toString();
+    ) as HTMLInputElement).value = (date.getUTCMonth() + 1).toString();
     (document.querySelector(
         '#day',
     ) as HTMLInputElement).value = date.getUTCDate().toString();
@@ -750,14 +765,13 @@ function set_date_ui(date: Date) {
 }
 
 function get_date_ui(): Date {
-    let date = new Date(
-        Number((document.querySelector('#year') as HTMLInputElement).value),
-        Number((document.querySelector('#month') as HTMLInputElement).value),
-        Number((document.querySelector('#day') as HTMLInputElement).value),
-        Number((document.querySelector('#hour') as HTMLInputElement).value),
-        Number((document.querySelector('#minute') as HTMLInputElement).value),
-        Number((document.querySelector('#second') as HTMLInputElement).value),
-    );
+    let date = new Date(0);
+    date.setUTCFullYear(Number((document.querySelector('#year') as HTMLInputElement).value));
+    date.setUTCMonth(Number((document.querySelector('#month') as HTMLInputElement).value) - 1);
+    date.setUTCDate(Number((document.querySelector('#day') as HTMLInputElement).value));
+    date.setUTCHours(Number((document.querySelector('#hour') as HTMLInputElement).value));
+    date.setUTCMinutes(Number((document.querySelector('#minute') as HTMLInputElement).value));
+    date.setUTCSeconds(Number((document.querySelector('#second') as HTMLInputElement).value));
 
     console.log(date.toISOString());
     return date;
@@ -772,35 +786,50 @@ function set_lat_long_ui(lat: Number, long: Number) {
     ) as HTMLInputElement).value = long.toString();
 }
 
+function get_lat_long_ui() {
+    let lat = Number((document.querySelector(
+        '#latitude',
+    ) as HTMLInputElement).value);
+    let long = Number((document.querySelector(
+        '#longitude',
+    ) as HTMLInputElement).value);
+
+    return [lat, long];
+}
+
+function get_speedup_ui() : number {
+    let speedup = document.querySelector('#speedup') as HTMLInputElement;
+    return Number(speedup.value);
+}
+
 function setup_time_and_location_controls() {
     let speedup = document.querySelector('#speedup') as HTMLInputElement;
     speedup.value = Number(3600).toString();
 
-    let date = new Date();
-    set_date_ui(date);
-
+    set_date_ui(time_for_sun);
     get_date_ui();
 
     // Stepney Green 51.5220° N, 0.0467° W
     set_lat_long_ui(51.522, -0.0467);
+
+    let button = document.querySelector('#play') as HTMLButtonElement;
+    button.textContent = "Play";
+    button.style.color = "green";
+    button.onclick = function() {
+        playing = !playing;
+        if (playing) {
+            button.textContent = "Stop";
+            button.style.color = "red";
+        } else {
+            button.textContent = "Play";
+            button.style.color = "green";
+        }
+    };
 }
 
 function main() {
     const gl = setup_webgl();
     setup_camera_controls();
-    setup_time_and_location_controls();
-
-    let today = new Date();
-    let latitude = 52;
-    let longitude = 0;
-
-    let sun_pos = SunCalc.getPosition(today, latitude, longitude);
-
-    //     let sun_position_element = document.querySelector('#sun-pos');
-    //     sun_position_element.textContent = JSON.stringify(sun_pos);
-
-    let to_sun = vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
-    console.log('vector to sun: ', to_sun);
 
     let render_state = {
         sundial: {
@@ -819,12 +848,18 @@ function main() {
         },
     };
 
+    setup_time_and_location_controls();
+
     setup_filepicker(gl, render_state);
 
+    let then = 0;
     function render(now) {
         let camera = mouse_based_orbit_camera(gl);
 
-        render_state.sundial.to_sun = sun_position_for_time(24 * 60 * 6 * now);
+        let delta = now - then;
+        then = now;
+        update_simulation_time(delta);
+        render_state.sundial.to_sun = sun_position();
 
         // if (dirty) {
         draw_to_canvas(gl, render_state, camera);
