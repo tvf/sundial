@@ -1,6 +1,6 @@
 import SunCalc from 'suncalc';
 
-import { vec3, mat4 } from 'gl-matrix';
+import { vec3, mat4, glMatrix } from 'gl-matrix';
 
 import { Mesh, initMeshBuffers } from 'webgl-obj-loader';
 
@@ -24,6 +24,25 @@ var mouse_is_down = false;
 var middle_mouse_is_down = false;
 var shift_is_down = false;
 var dirty = true;
+
+function model_rotation_transform(): mat4 {
+    let rot_x = Number(
+        (document.querySelector('#rotX') as HTMLInputElement).value,
+    );
+    let rot_y = Number(
+        (document.querySelector('#rotY') as HTMLInputElement).value,
+    );
+    let rot_z = Number(
+        (document.querySelector('#rotZ') as HTMLInputElement).value,
+    );
+
+    let rotation = mat4.create();
+    mat4.rotateX(rotation, rotation, glMatrix.toRadian(rot_x));
+    mat4.rotateY(rotation, rotation, glMatrix.toRadian(rot_y));
+    mat4.rotateZ(rotation, rotation, glMatrix.toRadian(rot_z));
+
+    return rotation;
+}
 
 function mouse_based_orbit_camera(gl) {
     const fieldOfView = (45 * Math.PI) / 180; // in radians
@@ -441,6 +460,12 @@ function draw_sundial(gl, render_state, camera, brightness) {
     gl.useProgram(shader);
 
     gl.uniformMatrix4fv(
+        gl.getUniformLocation(shader, 'model_to_world'),
+        false,
+        model_rotation_transform(),
+    );
+
+    gl.uniformMatrix4fv(
         gl.getUniformLocation(shader, 'world_to_clip'),
         false,
         camera.world_to_clip,
@@ -483,6 +508,12 @@ function draw_shadow_caps(gl, render_state, camera, translation) {
     let shader = render_state.sundial.shadow_cap_program;
 
     gl.useProgram(shader);
+
+    gl.uniformMatrix4fv(
+        gl.getUniformLocation(shader, 'model_to_world'),
+        false,
+        model_rotation_transform(),
+    );
 
     gl.uniformMatrix4fv(
         gl.getUniformLocation(shader, 'world_to_clip'),
@@ -550,6 +581,12 @@ function draw_shadow_volume(gl, render_state, camera, translation) {
     let shader = render_state.sundial.shadow_program;
 
     gl.useProgram(shader);
+
+    gl.uniformMatrix4fv(
+        gl.getUniformLocation(shader, 'model_to_world'),
+        false,
+        model_rotation_transform(),
+    );
 
     gl.uniformMatrix4fv(
         gl.getUniformLocation(shader, 'world_to_clip'),
@@ -632,15 +669,15 @@ function draw_shadow_volume(gl, render_state, camera, translation) {
 }
 
 function draw_to_canvas(gl, render_state, camera) {
-
-    let nighttime_label = document.querySelector('#nighttime') as HTMLLabelElement;
+    let nighttime_label = document.querySelector(
+        '#nighttime',
+    ) as HTMLLabelElement;
     if (render_state.sundial.to_sun[2] < 0) {
         nighttime_label.style.visibility = 'visible';
         // gl.clearColor(0.0, 0.0, 0.2, 1.0);
     } else {
         nighttime_label.style.visibility = 'hidden';
     }
-
 
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
@@ -724,7 +761,7 @@ function sun_position_for_time(time, latitude, longitude) {
     return to_sun;
 }
 
-function update_simulation_time(delta : number) {
+function update_simulation_time(delta: number) {
     if (playing) {
         let ms_adjustment = delta * get_speedup_ui();
 
@@ -747,9 +784,9 @@ function set_date_ui(date: Date) {
     (document.querySelector(
         '#year',
     ) as HTMLInputElement).value = date.getUTCFullYear().toString();
-    (document.querySelector(
-        '#month',
-    ) as HTMLInputElement).value = (date.getUTCMonth() + 1).toString();
+    (document.querySelector('#month') as HTMLInputElement).value = (
+        date.getUTCMonth() + 1
+    ).toString();
     (document.querySelector(
         '#day',
     ) as HTMLInputElement).value = date.getUTCDate().toString();
@@ -766,12 +803,25 @@ function set_date_ui(date: Date) {
 
 function get_date_ui(): Date {
     let date = new Date(0);
-    date.setUTCFullYear(Number((document.querySelector('#year') as HTMLInputElement).value));
-    date.setUTCMonth(Number((document.querySelector('#month') as HTMLInputElement).value) - 1);
-    date.setUTCDate(Number((document.querySelector('#day') as HTMLInputElement).value));
-    date.setUTCHours(Number((document.querySelector('#hour') as HTMLInputElement).value));
-    date.setUTCMinutes(Number((document.querySelector('#minute') as HTMLInputElement).value));
-    date.setUTCSeconds(Number((document.querySelector('#second') as HTMLInputElement).value));
+    date.setUTCFullYear(
+        Number((document.querySelector('#year') as HTMLInputElement).value),
+    );
+    date.setUTCMonth(
+        Number((document.querySelector('#month') as HTMLInputElement).value) -
+            1,
+    );
+    date.setUTCDate(
+        Number((document.querySelector('#day') as HTMLInputElement).value),
+    );
+    date.setUTCHours(
+        Number((document.querySelector('#hour') as HTMLInputElement).value),
+    );
+    date.setUTCMinutes(
+        Number((document.querySelector('#minute') as HTMLInputElement).value),
+    );
+    date.setUTCSeconds(
+        Number((document.querySelector('#second') as HTMLInputElement).value),
+    );
 
     console.log(date.toISOString());
     return date;
@@ -787,17 +837,17 @@ function set_lat_long_ui(lat: Number, long: Number) {
 }
 
 function get_lat_long_ui() {
-    let lat = Number((document.querySelector(
-        '#latitude',
-    ) as HTMLInputElement).value);
-    let long = Number((document.querySelector(
-        '#longitude',
-    ) as HTMLInputElement).value);
+    let lat = Number(
+        (document.querySelector('#latitude') as HTMLInputElement).value,
+    );
+    let long = Number(
+        (document.querySelector('#longitude') as HTMLInputElement).value,
+    );
 
     return [lat, long];
 }
 
-function get_speedup_ui() : number {
+function get_speedup_ui(): number {
     let speedup = document.querySelector('#speedup') as HTMLInputElement;
     return Number(speedup.value);
 }
@@ -813,16 +863,16 @@ function setup_time_and_location_controls() {
     set_lat_long_ui(51.522, -0.0467);
 
     let button = document.querySelector('#play') as HTMLButtonElement;
-    button.textContent = "Play";
-    button.style.color = "green";
-    button.onclick = function() {
+    button.textContent = 'Play';
+    button.style.color = 'green';
+    button.onclick = function () {
         playing = !playing;
         if (playing) {
-            button.textContent = "Stop";
-            button.style.color = "red";
+            button.textContent = 'Stop';
+            button.style.color = 'red';
         } else {
-            button.textContent = "Play";
-            button.style.color = "green";
+            button.textContent = 'Play';
+            button.style.color = 'green';
         }
     };
 }
