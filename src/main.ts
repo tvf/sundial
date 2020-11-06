@@ -713,10 +713,10 @@ function sun_position_for_time(now) {
 
     let sun_pos = SunCalc.getPosition(date, latitude, longitude);
 
-    let time_element = document.querySelector('#time');
+    // let time_element = document.querySelector('#time');
     let to_sun = vector_to_sun(sun_pos.altitude, sun_pos.azimuth);
 
-    time_element.textContent = date.toDateString() + ' ' + date.toTimeString();
+    // time_element.textContent = date.toDateString() + ' ' + date.toTimeString();
 
     return vec3.fromValues(0.18, 0.01, 0.7);
     // return to_sun;
