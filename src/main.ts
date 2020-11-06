@@ -16,6 +16,8 @@ var paraview_style_camera = {
     ),
 };
 
+var playing = false;
+
 var last_mouse_position = [0, 0];
 var mouse_is_down = false;
 var middle_mouse_is_down = false;
@@ -28,7 +30,7 @@ function mouse_based_orbit_camera(gl) {
     gl.canvas.width = gl.canvas.clientWidth;
     gl.canvas.height = gl.canvas.clientHeight;
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 
     //const aspect = 640 / 480;
     const zNear = 4;
@@ -399,7 +401,7 @@ function make_shadow_mesh(gl: WebGLRenderingContext, model_mesh: Mesh) {
     return result;
 }
 
-function populate_meshes(gl, render_state, obj_string : string) {
+function populate_meshes(gl, render_state, obj_string: string) {
     let mesh = new Mesh(obj_string);
     render_state.sundial.mesh = initMeshBuffers(gl, mesh);
     render_state.sundial.shadow_mesh = make_shadow_mesh(gl, mesh);
@@ -420,8 +422,12 @@ function setup_filepicker(gl, render_state) {
     file_selection.oninput = function (event: HTMLInputEvent) {
         var reader = new FileReader();
 
-        reader.onload = function (filecontents : ProgressEvent<FileReader>) {
-            populate_meshes(gl, render_state, filecontents.target.result as string);
+        reader.onload = function (filecontents: ProgressEvent<FileReader>) {
+            populate_meshes(
+                gl,
+                render_state,
+                filecontents.target.result as string,
+            );
         };
 
         reader.readAsText(event.target.files[0]);
@@ -722,9 +728,67 @@ function sun_position_for_time(now) {
     // return to_sun;
 }
 
+function set_date_ui(date: Date) {
+    (document.querySelector(
+        '#year',
+    ) as HTMLInputElement).value = date.getUTCFullYear().toString();
+    (document.querySelector(
+        '#month',
+    ) as HTMLInputElement).value = date.getUTCMonth().toString();
+    (document.querySelector(
+        '#day',
+    ) as HTMLInputElement).value = date.getUTCDate().toString();
+    (document.querySelector(
+        '#hour',
+    ) as HTMLInputElement).value = date.getUTCHours().toString();
+    (document.querySelector(
+        '#minute',
+    ) as HTMLInputElement).value = date.getUTCMinutes().toString();
+    (document.querySelector(
+        '#second',
+    ) as HTMLInputElement).value = date.getUTCSeconds().toString();
+}
+
+function get_date_ui(): Date {
+    let date = new Date(
+        Number((document.querySelector('#year') as HTMLInputElement).value),
+        Number((document.querySelector('#month') as HTMLInputElement).value),
+        Number((document.querySelector('#day') as HTMLInputElement).value),
+        Number((document.querySelector('#hour') as HTMLInputElement).value),
+        Number((document.querySelector('#minute') as HTMLInputElement).value),
+        Number((document.querySelector('#second') as HTMLInputElement).value),
+    );
+
+    console.log(date.toISOString());
+    return date;
+}
+
+function set_lat_long_ui(lat: Number, long: Number) {
+    (document.querySelector(
+        '#latitude',
+    ) as HTMLInputElement).value = lat.toString();
+    (document.querySelector(
+        '#longitude',
+    ) as HTMLInputElement).value = long.toString();
+}
+
+function setup_time_and_location_controls() {
+    let speedup = document.querySelector('#speedup') as HTMLInputElement;
+    speedup.value = Number(3600).toString();
+
+    let date = new Date();
+    set_date_ui(date);
+
+    get_date_ui();
+
+    // Stepney Green 51.5220° N, 0.0467° W
+    set_lat_long_ui(51.522, -0.0467);
+}
+
 function main() {
     const gl = setup_webgl();
     setup_camera_controls();
+    setup_time_and_location_controls();
 
     let today = new Date();
     let latitude = 52;

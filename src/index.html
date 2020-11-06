@@ -4,7 +4,7 @@
         <title>Sundial Simulator</title>
     </head>
 
-    <body style="margin: 0; font-family: monospace;">
+    <body style="margin: 0; font-family: monospace">
         <!-- <pre
             id="time"
             style="
@@ -15,32 +15,43 @@
                 font-family: monospace;
             "
         ></pre> -->
-        <canvas style="width: 100%; height:100%" id="gl_canvas"></canvas>
-        <div style="position: fixed; top:0; right: 0;">
-            <br/>
-            <input type="file" id="sundial-obj" name="sundial-obj"/>
-            <br/>
-            <br/>
-            <label>Rotation (Tait-Bryan)</label><br/>
-            <label>X </label><input type="number" id="rotX"/><br/>
-            <label>Y </label><input type="number" id="rotY"/><br/>
-            <label>Z </label><input type="number" id="rotZ"/>
+        <canvas style="width: 100%; height: 100%" id="gl_canvas"></canvas>
+        <div style="position: fixed; top: 0; right: 0">
+            <br />
+            <input type="file" id="sundial-obj" name="sundial-obj" />
+            <br />
+            <br />
+            <label>Rotation (Tait-Bryan)</label><br />
+            <label>X </label><input type="number" id="rotX" /><br />
+            <label>Y </label><input type="number" id="rotY" /><br />
+            <label>Z </label><input type="number" id="rotZ" />
         </div>
-        <div style="position: fixed; bottom: 0; width:100%; text-align:center;">
-            <label>Year </label><input type="number" id="year" min="-9999" max="9999"/>
-            <label>Month </label><input type="number" id="month" min="0" max="12"/>
-            <label>Day </label><input type="number" id="day" min="0" max="31"/>
-            <label>Hour </label><input type="number" id="hour" min="0" max="23"/>
-            <label>Minute </label><input type="number" id="minute" min="0" max="59"/>
-            <label>Second </label><input type="number" id="second" min="0" max="59"/>
-            <br/>
-            <br/>
+        <div
+            style="position: fixed; bottom: 0; width: 100%; text-align: center"
+        >
+            <label>Year </label
+            ><input type="number" id="year" min="-9999" max="9999" />
+            <label>Month </label
+            ><input type="number" id="month" min="0" max="12" />
+            <label>Day </label
+            ><input type="number" id="day" min="0" max="31" />
+            <label>Hour </label
+            ><input type="number" id="hour" min="0" max="23" />
+            <label>Minute </label
+            ><input type="number" id="minute" min="0" max="59" />
+            <label>Second </label
+            ><input type="number" id="second" min="0" max="59" />
+            <br />
+            <br />
             <button>Play</button>
-            <label>Speedup </label><input type="number" id="speedup" min="0" max="86400"/>
-            <br/>
-            <br/>
-            <label>Latitude </label><input type="number" id="latitude" min="-90" max="90"/>
-            <label>Longitude </label><input type="number" id="longitude" min="-180" max="180"/>
+            <label>Speedup </label
+            ><input type="number" id="speedup" min="0" max="86400" />
+            <br />
+            <br />
+            <label>Latitude </label
+            ><input type="number" id="latitude" min="-90" max="90" />
+            <label>Longitude </label
+            ><input type="number" id="longitude" min="-180" max="180" />
         </div>
     </body>
     <script src="main.ts"></script>

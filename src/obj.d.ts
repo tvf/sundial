@@ -1,4 +1,4 @@
 declare module '*.obj' {
-    const value : string;
+    const value: string;
     export = value;
 }
