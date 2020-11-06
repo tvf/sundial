@@ -6,6 +6,7 @@ uniform mat4 world_to_clip;
 uniform mat4 clip_to_world;
 uniform vec2 viewport;
 uniform float brightness;
+uniform float ground_plane_height;
 
 out vec4 color;
 
@@ -33,7 +34,7 @@ void main() {
     vec3 o = world_ray_begin;
     vec3 d = normalize(world_ray_end - world_ray_begin);
 
-    float h = -10.f;
+    float h = ground_plane_height;
 
     if (abs(d.z) < 0.001) {
         discard;
@@ -47,8 +48,17 @@ void main() {
         vec4 mixing_color = vec4(vec3(0.75f), 1.f);
 
         float stripe_width = 0.1f;
-        if (abs(intersect.x) < stripe_width || abs(intersect.y) < stripe_width) {
-            mixing_color.rgb = vec3(0.5f);
+        if (abs(intersect.x) < stripe_width && intersect.y >= stripe_width) {
+            mixing_color.rgb = vec3(0.5, 0.5f, 1.f);
+        }
+        if (abs(intersect.x) < stripe_width && intersect.y <= -stripe_width) {
+            mixing_color.rgb = vec3(1.f, 0.5f, 0.5f);
+        }
+        if (abs(intersect.y) < stripe_width && intersect.x >= stripe_width) {
+            mixing_color.rgb = vec3(1.f, 1.f, 0.f);
+        }
+        if (abs(intersect.y) < stripe_width && intersect.x <= -stripe_width) {
+            mixing_color.rgb = vec3(0.5f, 1.f, 0.5f);
         }
 
         mixing_color.rgb *= brightness;

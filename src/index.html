@@ -4,15 +4,14 @@
         <title>Sundial Simulator</title>
     </head>
 
-    <body style="margin: 0; font-family: monospace">
+    <body style="margin: 0; font-family: monospace;">
         <label
             id="nighttime"
             style="
                 position: absolute;
-                font-size: large;
+                font-size: larger;
                 left: 2em;
                 top: 1em;
-                font-family: monospace;
             "
             >NIGHTTIME</label
         >
@@ -26,6 +25,16 @@
             <label>X </label><input type="number" id="rotX" /><br />
             <label>Y </label><input type="number" id="rotY" /><br />
             <label>Z </label><input type="number" id="rotZ" />
+            <br />
+            <br />
+            <label>Ground Plane Height </label><input type="number" id="ground_plane_height" style="width: 40px";/>
+
+        </div>
+        <div style="position: fixed; left: 0; bottom: 0; font-size: larger;">
+            <label style="color: rgb(127,127,255)">N</label>
+            <label style="color: rgb(255,255,0)">E</label>
+            <label style="color: rgb(255,127,0)">S</label>
+            <label style="color: rgb(127,255,127)">W</label>
         </div>
         <div
             style="position: fixed; bottom: 0; width: 100%; text-align: center"

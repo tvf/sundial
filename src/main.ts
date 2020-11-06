@@ -472,6 +472,8 @@ function draw_ground_plane(gl, render_state, camera, brightness) {
     );
 
     gl.uniform1f(gl.getUniformLocation(shader, 'brightness'), brightness);
+    gl.uniform1f(gl.getUniformLocation(shader, 'ground_plane_height'),
+                 document.querySelector('#ground_plane_height').value);
 
     let viewport = vec2.fromValues(gl.canvas.width, gl.canvas.height);
     gl.uniform2fv(gl.getUniformLocation(shader, 'viewport'), viewport);
@@ -757,12 +759,14 @@ function draw_to_canvas(gl, render_state, camera) {
     ) as HTMLLabelElement;
     if (render_state.sundial.to_sun[2] < 0) {
         nighttime_label.style.visibility = 'visible';
-        // gl.clearColor(0.0, 0.0, 0.2, 1.0);
+        gl.clearColor(0.2, 0.2, 0.2, 1.0);
+        document.body.style.color = 'lightgrey';
     } else {
         nighttime_label.style.visibility = 'hidden';
+        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+        document.body.style.color = 'black';
     }
 
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
@@ -851,16 +855,7 @@ function sun_position_for_time(time, latitude, longitude) {
 function update_simulation_time(delta: number) {
     if (playing) {
         let ms_adjustment = delta * get_speedup_ui();
-
-        console.log(ms_adjustment);
-        console.log(delta);
-        console.log(get_speedup_ui());
-        console.log(time_for_sun.getTime());
-
         time_for_sun.setTime(time_for_sun.getTime() + ms_adjustment);
-
-        console.log(time_for_sun.getTime());
-
         set_date_ui(time_for_sun);
     }
 
@@ -909,8 +904,6 @@ function get_date_ui(): Date {
     date.setUTCSeconds(
         Number((document.querySelector('#second') as HTMLInputElement).value),
     );
-
-    console.log(date.toISOString());
     return date;
 }
 
