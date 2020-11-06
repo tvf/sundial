@@ -32,13 +32,8 @@ void main() {
 
     vec3 o = world_ray_begin;
     vec3 d = normalize(world_ray_end - world_ray_begin);
-    // p.n = c
-    // for us, n = (0, 0, 1)
-    //(o + td).n = c
-    // o.z + t (d.z) = c
-    // (c - o.z) / (d.z) = t
 
-    float h = 0.f;
+    float h = -10.f;
 
     if (abs(d.z) < 0.001) {
         discard;
@@ -48,11 +43,22 @@ void main() {
 
     if (t > 0.f) {
         vec3 intersect = o + d * t;
-        color = vec4(1.f, 0.f, 0.f, 1.f);
+
+        vec4 mixing_color = vec4(vec3(0.75f), 1.f);
+
+        float stripe_width = 0.1f;
+        if (abs(intersect.x) < stripe_width || abs(intersect.y) < stripe_width) {
+            mixing_color.rgb = vec3(0.5f);
+        }
+
+        mixing_color.rgb *= brightness;
+        color = mixing_color;
 
         vec4 clip_intersect = vec4(world_to_clip * vec4(intersect, 1.f));
         float intersect_depth = (clip_intersect.z / clip_intersect.w + 1.f) / 2.f;
 
         gl_FragDepth = intersect_depth;
+    } else {
+        discard;
     }
 }

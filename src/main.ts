@@ -775,12 +775,13 @@ function draw_to_canvas(gl, render_state, camera) {
     if (render_state.sundial.mesh != null) {
         if (render_state.sundial.to_sun[2] < 0) {
             draw_sundial(gl, render_state, camera, 0.1); // draw shady bit
-            draw_ground_plane(gl, render_state, camera, 0.1); // draw shady bit
+            draw_ground_plane(gl, render_state, camera, 0.2); // draw shady bit
         } else {
             gl.colorMask(false, false, false, false); // don't update colors
 
             // fill the depth buffer
             draw_sundial(gl, render_state, camera, 0);
+            draw_ground_plane(gl, render_state, camera, 0.2); // draw shady bit
 
             gl.depthMask(false); // no more writing to the depth buffer
 
@@ -814,9 +815,11 @@ function draw_to_canvas(gl, render_state, camera) {
 
             gl.stencilFunc(gl.NOTEQUAL, 0, 0xff);
             draw_sundial(gl, render_state, camera, 0.1); // draw shady bit
+            draw_ground_plane(gl, render_state, camera, 0.2); // draw shady bit
 
             gl.stencilFunc(gl.EQUAL, 0, 0xff);
             draw_sundial(gl, render_state, camera, 1); // draw sunny bit
+            draw_ground_plane(gl, render_state, camera, 1); // draw shady bit
 
             gl.depthMask(true); // unmask depth buffer
         }
