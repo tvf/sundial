@@ -59,7 +59,7 @@ function mouse_based_orbit_camera(gl) {
 
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
-    // mat4.ortho(projectionMatrix, -16.0, 16.0, -12.0, 12.0, zNear, zFar);
+    // mat4.ortho(projectionMatrix, -10 * aspect, 10 * aspect, -10.0, 10.0, zNear, zFar);
     // TODO make the zoom controls nice with the orthographic view
 
     const modelViewMatrix = mat4.mul(
@@ -767,7 +767,6 @@ function draw_to_canvas(gl, render_state, camera) {
         document.body.style.color = 'black';
     }
 
-
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
     gl.enable(gl.STENCIL_TEST);
@@ -802,13 +801,14 @@ function draw_to_canvas(gl, render_state, camera) {
 
             gl.frontFace(gl.CW);
             draw_shadow_caps(gl, render_state, camera, 0);
+            // gl.frontFace(gl.CW);
+            // draw_shadow_caps(
+            //     gl,
+            //     render_state,
+            //     camera,
+            //     render_state.sundial.shadow_length,
+            // );
             gl.frontFace(gl.CCW);
-            draw_shadow_caps(
-                gl,
-                render_state,
-                camera,
-                render_state.sundial.shadow_length,
-            );
 
             gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.KEEP);
             gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.KEEP);
