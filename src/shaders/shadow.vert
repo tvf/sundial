@@ -10,7 +10,8 @@ uniform mat4 model_to_world;
 uniform mat4 world_to_clip;
 uniform vec3 to_sun;
 
-out vec2 depth_zw;
+out float depth_z;
+out float depth_w;
 
 void main(void) {
 
@@ -24,13 +25,18 @@ void main(void) {
     if (primary_faces_sun == secondary_faces_sun) {
         gl_Position = vec4(0.f, 0.f, -1000.f, 1.f);
     } else {
+        vec4 position;
+
         if (primary_faces_sun) {
-            gl_Position = vec4(world_to_clip * model_to_world * vec4(world_position, 1.f));
+            position = vec4(world_to_clip * model_to_world * vec4(world_position, 1.f));
         } else {
-            gl_Position = vec4(world_to_clip * vec4(-to_sun, 0.f));
+            position = vec4(world_to_clip * vec4(-to_sun, 0.f));
         }
 
-        depth_zw = gl_Position.zw;
+        depth_z = position.z;
+        depth_w = position.w;
+
+        gl_Position = position;
         gl_Position.z = 0.f;
     }
 }

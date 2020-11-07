@@ -9,6 +9,9 @@ uniform float brightness;
 
 layout(location = 0) out vec4 color;
 
+in float depth_z;
+in float depth_w;
+
 void main(void) {
 
     vec3 calculated_normal = normalize(cross(dFdx(vec3(frag_world_position)),
@@ -18,6 +21,8 @@ void main(void) {
     illumination += 1.f;
     illumination /= 2.f;
     color = vec4(vec3(illumination * brightness), 1.f);
+
+    gl_FragDepth = clamp((depth_z / depth_w + 1.) * 0.5, 0.f, 1.f);
 
     // calculated_normal += 1.f;
     // calculated_normal /= 2.f;
