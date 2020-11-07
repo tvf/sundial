@@ -472,8 +472,10 @@ function draw_ground_plane(gl, render_state, camera, brightness) {
     );
 
     gl.uniform1f(gl.getUniformLocation(shader, 'brightness'), brightness);
-    gl.uniform1f(gl.getUniformLocation(shader, 'ground_plane_height'),
-                 document.querySelector('#ground_plane_height').value);
+    gl.uniform1f(
+        gl.getUniformLocation(shader, 'ground_plane_height'),
+        document.querySelector('#ground_plane_height').value,
+    );
 
     let viewport = vec2.fromValues(gl.canvas.width, gl.canvas.height);
     gl.uniform2fv(gl.getUniformLocation(shader, 'viewport'), viewport);
