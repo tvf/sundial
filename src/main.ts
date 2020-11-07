@@ -175,7 +175,7 @@ function setup_camera_controls() {
 
 function setup_webgl() {
     const canvas = document.querySelector('#gl_canvas') as HTMLCanvasElement;
-    const gl = canvas.getContext('webgl2', { stencil: true });
+    const gl = canvas.getContext('webgl2', { antialias: false, stencil: true });
 
     if (!gl) {
         alert('No WebGL2!');
