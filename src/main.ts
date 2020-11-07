@@ -47,8 +47,8 @@ function model_rotation_transform(): mat4 {
 function mouse_based_orbit_camera(gl) {
     const fieldOfView = (45 * Math.PI) / 180; // in radians
 
-    gl.canvas.width = gl.canvas.clientWidth;
-    gl.canvas.height = gl.canvas.clientHeight;
+    gl.canvas.width = 2 * gl.canvas.clientWidth;
+    gl.canvas.height = 2 * gl.canvas.clientHeight;
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 
